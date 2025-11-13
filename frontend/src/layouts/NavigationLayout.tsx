@@ -4,7 +4,7 @@ import UserProfileCircle from "../components/NavComponents/UserProfileCircle";
 
 export default function NavigationLayout() {
   return (
-    <nav className="bg-tertiary-container rounded-2xl m-4 p-3 flex flex-col gap-4 md:flex-row shadow-xl ">
+    <nav className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl m-4 p-3 flex flex-col gap-4 md:flex-row shadow-lg">
       <Hero />
       <NavLinkBar />
       <UserProfileCircle />

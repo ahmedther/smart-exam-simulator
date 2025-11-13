@@ -1,33 +1,79 @@
-@import url("https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
-/* (Optional) Anything you still truly need can go here in @layer base */
-
-/* #9c27b0 main theme # */
-
+/* Modern indigo-purple theme matching the landing page */
 @theme {
-  --color-primary: #7b4e7f;
-  --color-secondary: #6b586b;
-  --color-tertiary: #82524a;
+  /* Primary colors - Indigo to Purple gradient theme */
+  --color-primary: #4f46e5; /* indigo-600 */
+  --color-secondary: #7c3aed; /* purple-600 */
+  --color-tertiary: #6366f1; /* indigo-500 */
 
-  --color-primary-container: #ffd6fe;
-  --color-secondary-container: #f4dbf1;
-  --color-tertiary-container: #ffdad4;
+  /* Container colors - Light, airy backgrounds */
+  --color-primary-container: #eef2ff; /* indigo-50 */
+  --color-secondary-container: #faf5ff; /* purple-50 */
+  --color-tertiary-container: #f5f3ff; /* purple-50 lighter */
 
-  --color-on-primary-container: #613766;
-  --color-on-secondary-container: #534153;
-  --color-on-tertiary-container: #673b34;
+  /* On-container text colors */
+  --color-on-primary-container: #3730a3; /* indigo-800 */
+  --color-on-secondary-container: #6b21a8; /* purple-800 */
+  --color-on-tertiary-container: #4338ca; /* indigo-700 */
 
-  --color-surface: #fff7fa;
+  /* Surface and backgrounds */
+  --color-surface: #ffffff;
+  --color-surface-variant: #f9fafb; /* gray-50 */
+  --color-background: #fefefe;
+
+  /* Accent colors */
+  --color-accent: #8b5cf6; /* purple-500 */
+  --color-accent-light: #c4b5fd; /* purple-300 */
+
+  /* Text colors */
+  --color-on-surface: #111827; /* gray-900 */
+  --color-on-surface-variant: #6b7280; /* gray-500 */
+
+  /* Border colors */
+  --color-outline: #e5e7eb; /* gray-200 */
+  --color-outline-variant: #f3f4f6; /* gray-100 */
+
+  /* Gradient stops for consistency */
+  --gradient-from: #4f46e5; /* indigo-600 */
+  --gradient-to: #7c3aed; /* purple-600 */
 }
 
 @layer base {
-  /* Example: honor prefers-reduced-motion */
   html {
-    font-family: "Merriweather", sans-serif;
-    background-color: var(--color-surface);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      sans-serif;
+    background: linear-gradient(to bottom right, #eef2ff, #ffffff, #faf5ff);
+    background-attachment: fixed;
+    color: var(--color-on-surface);
+    font-feature-settings: "cv11", "ss01";
+    font-optical-sizing: auto;
   }
 
+  body {
+    min-height: 100vh;
+  }
+
+  /* Smooth scrolling for modern browsers */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Better focus styles */
+  *:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  /* Selection colors matching theme */
+  ::selection {
+    background-color: var(--color-accent-light);
+    color: var(--color-on-primary-container);
+  }
+
+  /* Respect reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -37,9 +83,13 @@
       transition-duration: 0.001ms !important;
       scroll-behavior: auto !important;
     }
+
+    html {
+      scroll-behavior: auto;
+    }
   }
 
-  /* Example: visually-hidden utility if you really use it */
+  /* Visually hidden utility */
   .visually-hidden {
     position: absolute !important;
     width: 1px;
@@ -50,5 +100,33 @@
     clip: rect(0 0 0 0);
     white-space: nowrap;
     border: 0;
+  }
+}
+
+/* Custom utility classes for the theme */
+@layer utilities {
+  .gradient-primary {
+    background: linear-gradient(
+      to right,
+      var(--gradient-from),
+      var(--gradient-to)
+    );
+  }
+
+  .text-gradient {
+    background: linear-gradient(
+      to right,
+      var(--gradient-from),
+      var(--gradient-to)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 }
