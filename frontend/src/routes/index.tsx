@@ -1,10 +1,24 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import LinkButton from "../ui/Buttons/LinkButton";
+import InfoBadge from "../ui/Info/InfoBadge";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
 });
 
 function HomeComponent() {
+  const [hasSavedProgress, setHasSavedProgress] = useState(true);
+
+  // Check if there's a saved exam session
+  useEffect(() => {
+    // TODO: Replace with actual API call to check for saved session
+    // For now, checking localStorage or you can call your Django backend
+    const savedSession = localStorage.getItem("exam_session_id");
+    setHasSavedProgress(!!savedSession);
+    setHasSavedProgress(true);
+  }, []);
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-linear-to-br from-indigo-50 via-white to-purple-50 px-4">
       <div className="max-w-2xl w-full text-center space-y-8">
@@ -28,28 +42,30 @@ function HomeComponent() {
           you really know.
         </p>
 
-        {/* CTA Button */}
-        <div className="pt-4">
-          <Link
+        {/* CTA Buttons */}
+        <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <LinkButton
+            text="Start New Quiz"
             to="/test"
-            className="inline-flex items-center gap-2 bg-linear-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-xl hover:scale-105 transform transition-all duration-200 hover:from-indigo-700 hover:to-purple-700"
-          >
-            Start Quiz
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </Link>
+            variant="primary"
+            icon="arrow"
+          />
+
+          {hasSavedProgress && (
+            <LinkButton
+              text="Resume Quiz"
+              to="/test"
+              variant="secondary"
+              icon="resume"
+              search={{ resume: true }}
+            />
+          )}
         </div>
+
+        {/* Info badge if quiz can be resumed */}
+        {hasSavedProgress && (
+          <InfoBadge text="You have an unfinished quiz. Resume to continue where you left off!" />
+        )}
 
         {/* Optional decorative elements */}
         <div className="pt-8 flex justify-center gap-8 text-sm text-gray-400">

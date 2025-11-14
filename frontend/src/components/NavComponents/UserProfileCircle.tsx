@@ -1,4 +1,5 @@
 import profilePic from "../../assets/profile.jpg";
+import GradientText from "../../ui/Texts/GradientText";
 
 export default function UserProfileCircle() {
   return (
@@ -12,9 +13,7 @@ export default function UserProfileCircle() {
           />
         </div>
       </div>
-      <h1 className="text-gray-700 font-semibold">
-        {import.meta.env.VITE_USER_NAME}
-      </h1>
+      <GradientText text={import.meta.env.VITE_USER_NAME} />
     </div>
   );
 }
