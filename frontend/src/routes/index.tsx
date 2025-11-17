@@ -1,103 +1,137 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import LinkButton from "../ui/Buttons/LinkButton";
+import { useState, useCallback } from "react";
+import Button from "../ui/Buttons/Button";
 import InfoBadge from "../ui/Info/InfoBadge";
+import ConfirmModal from "../ui/Modals/ConfirmModal";
+import {
+  useStartExam,
+  useCheckActiveSession,
+  activeSessionQueryOptions,
+} from "../hooks/useExam";
+import {
+  Feature,
+  ClipboardIcon,
+  ClockIcon,
+  StarIcon,
+} from "../components/Features/Features";
+
+// ✅ Properly typed router context
 
 export const Route = createFileRoute("/")({
+  loader: async ({ context }: any) => {
+    context.queryClient.prefetchQuery(activeSessionQueryOptions);
+    return {};
+  },
   component: HomeComponent,
 });
 
 function HomeComponent() {
-  const [hasSavedProgress, setHasSavedProgress] = useState(true);
+  const startExam = useStartExam();
+  const { data: activeSession, isLoading } = useCheckActiveSession();
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Check if there's a saved exam session
-  useEffect(() => {
-    // TODO: Replace with actual API call to check for saved session
-    // For now, checking localStorage or you can call your Django backend
-    const savedSession = localStorage.getItem("exam_session_id");
-    setHasSavedProgress(!!savedSession);
-    setHasSavedProgress(true);
+  const hasActiveSession = activeSession?.has_active_session ?? false;
+
+  // Use useCallback to memoize handlers and prevent unnecessary re-renders
+  const handleStartNewQuizClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+
+      if (hasActiveSession) {
+        setShowConfirmModal(true);
+      } else {
+        startExam.mutate();
+      }
+    },
+    [hasActiveSession, startExam]
+  );
+
+  const handleConfirmNewQuiz = useCallback(() => {
+    setShowConfirmModal(false);
+    startExam.mutate();
+  }, [startExam]);
+
+  const handleCancelNewQuiz = useCallback(() => {
+    setShowConfirmModal(false);
   }, []);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-linear-to-br from-indigo-50 via-white to-purple-50 px-4">
-      <div className="max-w-2xl w-full text-center space-y-8">
-        {/* Main heading */}
-        <div className="space-y-4">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
-            Ready to Test Your
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-purple-600">
-              {" "}
-              Knowledge?
-            </span>
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-600 font-medium">
-            Do your best and good luck! 🚀
+    <>
+      <main className="min-h-screen flex items-center justify-center bg-linear-to-br from-indigo-50 via-white to-purple-50 px-4">
+        <div className="max-w-2xl w-full text-center space-y-8">
+          {/* Main heading */}
+          <header className="space-y-4">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
+              Ready to Test Your
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-purple-600">
+                {" "}
+                Knowledge?
+              </span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-600 font-medium">
+              Do your best and good luck! 🚀
+            </p>
+          </header>
+
+          {/* Description */}
+          <p className="text-lg text-gray-500 max-w-xl mx-auto">
+            Challenge yourself with our multiple choice questions and see how
+            much you really know.
           </p>
-        </div>
 
-        {/* Description */}
-        <p className="text-lg text-gray-500 max-w-xl mx-auto">
-          Challenge yourself with our multiple choice questions and see how much
-          you really know.
-        </p>
-
-        {/* CTA Buttons */}
-        <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <LinkButton
-            text="Start New Quiz"
-            to="/test"
-            variant="primary"
-            icon="arrow"
-          />
-
-          {hasSavedProgress && (
-            <LinkButton
-              text="Resume Quiz"
-              to="/test"
-              variant="secondary"
-              icon="resume"
-              search={{ resume: true }}
+          {/* CTA Buttons */}
+          <nav className="pt-4 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button
+              text="Start New Quiz"
+              variant="primary"
+              icon="arrow"
+              onClick={handleStartNewQuizClick}
             />
+
+            {hasActiveSession && activeSession?.session_id && (
+              <Button
+                text="Resume Quiz"
+                variant="secondary"
+                icon="resume"
+                search={{ sessionId: activeSession.session_id }}
+              />
+            )}
+          </nav>
+
+          {/* Info badge if quiz can be resumed */}
+          {!isLoading && hasActiveSession && (
+            <InfoBadge text="You have an unfinished quiz. Resume to continue where you left off!" />
           )}
-        </div>
 
-        {/* Info badge if quiz can be resumed */}
-        {hasSavedProgress && (
-          <InfoBadge text="You have an unfinished quiz. Resume to continue where you left off!" />
-        )}
+          {/* Loading state message */}
+          {isLoading && (
+            <p className="text-sm text-indigo-600 animate-pulse" role="status">
+              Checking for existing sessions...
+            </p>
+          )}
 
-        {/* Optional decorative elements */}
-        <div className="pt-8 flex justify-center gap-8 text-sm text-gray-400">
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-              <path
-                fillRule="evenodd"
-                d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>Multiple Choice</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>Timed Questions</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span>Track Progress</span>
-          </div>
+          {/* Feature highlights */}
+          <aside className="pt-8 flex justify-center gap-8 text-sm text-gray-400">
+            <Feature icon={<ClipboardIcon />} label="Multiple Choice" />
+            <Feature icon={<ClockIcon />} label="Timed Questions" />
+            <Feature icon={<StarIcon />} label="Track Progress" />
+          </aside>
         </div>
-      </div>
-    </main>
+      </main>
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onConfirm={handleConfirmNewQuiz}
+        onCancel={handleCancelNewQuiz}
+        title="Start New Quiz?"
+        message="You have an active exam session. Starting a new quiz will abandon your current progress. Continue?"
+        confirmText="Start New Quiz"
+        cancelText="Cancel"
+      />
+    </>
   );
 }
+
+// ✅ Extract repeated components for better maintainability

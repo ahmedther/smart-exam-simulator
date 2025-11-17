@@ -33,6 +33,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             "choice_c",
             "choice_d",
             "correct_answer",
+            "correct_answer_text",
             "explanation",
             "is_active",
         ]

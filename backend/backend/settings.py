@@ -57,6 +57,7 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
     ],
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
@@ -71,16 +72,38 @@ REST_FRAMEWORK = {
     ],
 }
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
 # CORS Settings (for React frontend)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Vite default
+    "http://127.0.0.1:5173",  # Add this - you're using 127.0.0.1
     "http://localhost:3000",  # Create React App
 ]
-
 CORS_ALLOW_CREDENTIALS = True
+
+# Add these for more permissive CORS during development
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 ROOT_URLCONF = "backend.urls"
 

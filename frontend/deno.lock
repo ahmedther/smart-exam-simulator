@@ -3,6 +3,7 @@
   "specifiers": {
     "npm:@eslint/js@^9.39.1": "9.39.1",
     "npm:@tailwindcss/vite@^4.1.17": "4.1.17_vite@7.2.2__@types+node@24.10.1__picomatch@4.0.3_@types+node@24.10.1",
+    "npm:@tanstack/react-query@^5.90.9": "5.90.9_react@19.2.0",
     "npm:@tanstack/react-router-devtools@^1.135.2": "1.135.2_@tanstack+react-router@1.135.2__react@19.2.0__react-dom@19.2.0___react@19.2.0_react@19.2.0_react-dom@19.2.0__react@19.2.0_@types+node@24.10.1",
     "npm:@tanstack/react-router@^1.135.2": "1.135.2_react@19.2.0_react-dom@19.2.0__react@19.2.0",
     "npm:@tanstack/router-plugin@^1.135.2": "1.135.2_@tanstack+react-router@1.135.2__react@19.2.0__react-dom@19.2.0___react@19.2.0_vite@7.2.2__@types+node@24.10.1__picomatch@4.0.3_@babel+core@7.28.5_react@19.2.0_react-dom@19.2.0__react@19.2.0_@types+node@24.10.1",
@@ -822,6 +823,16 @@
     },
     "@tanstack/history@1.133.28": {
       "integrity": "sha512-B7+x7eP2FFvi3fgd3rNH9o/Eixt+pp0zCIdGhnQbAJjFrlwIKGjGnwyJjhWJ5fMQlGks/E2LdDTqEV4W9Plx7g=="
+    },
+    "@tanstack/query-core@5.90.9": {
+      "integrity": "sha512-UFOCQzi6pRGeVTVlPNwNdnAvT35zugcIydqjvFUzG62dvz2iVjElmNp/hJkUoM5eqbUPfSU/GJIr/wbvD8bTUw=="
+    },
+    "@tanstack/react-query@5.90.9_react@19.2.0": {
+      "integrity": "sha512-Zke2AaXiaSfnG8jqPZR52m8SsclKT2d9//AgE/QIzyNvbpj/Q2ln+FsZjb1j69bJZUouBvX2tg9PHirkTm8arw==",
+      "dependencies": [
+        "@tanstack/query-core",
+        "react"
+      ]
     },
     "@tanstack/react-router-devtools@1.135.2_@tanstack+react-router@1.135.2__react@19.2.0__react-dom@19.2.0___react@19.2.0_react@19.2.0_react-dom@19.2.0__react@19.2.0_@types+node@24.10.1": {
       "integrity": "sha512-8nG+twPfOvjaknnzLTTvnsXART9s6fQbY+Yj4nnNVOcF0FiUuK7TgJJQMKWHsmNa47X3fV1GZCTQV4cWhqKY0w==",
@@ -2166,6 +2177,7 @@
       "dependencies": [
         "npm:@eslint/js@^9.39.1",
         "npm:@tailwindcss/vite@^4.1.17",
+        "npm:@tanstack/react-query@^5.90.9",
         "npm:@tanstack/react-router-devtools@^1.135.2",
         "npm:@tanstack/react-router@^1.135.2",
         "npm:@tanstack/router-plugin@^1.135.2",

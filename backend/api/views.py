@@ -244,7 +244,7 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
                 }
             )
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], url_path="check-active")
     def check_active(self, request):
         """
         POST /api/exam-sessions/check-active/
@@ -265,7 +265,7 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
         active_session = ExamSession.objects.filter(
             browser_fingerprint=browser_fingerprint,
             status__in=["in_progress", "paused"],
-        ).first()
+        ).last()
 
         if active_session:
             return Response(

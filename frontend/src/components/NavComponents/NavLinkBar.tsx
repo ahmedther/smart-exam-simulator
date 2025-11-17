@@ -1,4 +1,4 @@
-import CustomNavLink from "../CustomNavLink";
+import CustomNavLink from "./CustomNavLink";
 
 export default function NavLinkBar() {
   return (

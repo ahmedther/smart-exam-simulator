@@ -65,9 +65,14 @@ class Question(models.Model):
     def __str__(self):
         return f"{self.category.name} - {self.question_text[:50]}..."
 
-    def get_correct_choice_text(self):
-        """Helper method to get the text of the correct answer"""
-        return getattr(self, f"choice_{self.correct_answer}")
+    @property
+    def correct_answer_text(self):
+        """Returns the actual text of the correct answer"""
+        return getattr(self, f"choice_{self.correct_answer}", "")
+
+    def get_choice_text(self, choice_letter):
+        """Helper to get any choice text by letter"""
+        return getattr(self, f"choice_{choice_letter}", "")
 
 
 class ExamSession(models.Model):
@@ -210,11 +215,7 @@ class ExamQuestion(models.Model):
 
     def get_final_category(self):
         """Get the final category (user corrected or assumed)"""
-        return (
-            self.user_corrected_category
-            or self.assumed_category
-            or self.question.category
-        )
+        return self.question.category
 
 
 class SessionActivity(models.Model):

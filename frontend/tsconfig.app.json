@@ -22,7 +22,10 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "allowJs": true,
+    "esModuleInterop": true, // helpful for default/commonjs interop
+    "resolveJsonModule": false
   },
   "include": ["src"]
 }

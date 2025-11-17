@@ -52,7 +52,7 @@ def create_exam_session(browser_fingerprint=None):
                 session=session,
                 question=question,
                 question_number=question_number,
-                assumed_category=category,  # Assume it's in the correct category
+                category=category,  # Assume it's in the correct category
             )
             all_exam_questions.append(exam_question)
             question_number += 1
