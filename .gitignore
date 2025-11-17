@@ -27,3 +27,4 @@ backend_venv
 docs
 **/db.sqlite3
 db.sqlite3
+./backend/db.sqlite3
