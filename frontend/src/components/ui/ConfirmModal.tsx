@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -65,7 +66,7 @@ export default function ConfirmModal({
 
   if (!shouldRender) return null;
 
-  return (
+  const modalContent = (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${
         isVisible ? "opacity-100" : "opacity-0"
@@ -189,6 +190,7 @@ export default function ConfirmModal({
       </div>
     </div>
   );
+  return createPortal(modalContent, document.body);
 }
 
 // Demo component to test the modal

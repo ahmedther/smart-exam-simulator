@@ -1,7 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { userExamSessionOptions } from "../hooks/useExam";
+import { useErrorRedirect } from "../hooks/useErrorRedirect";
+import Spinner from "../components/ui/Spinner";
 
-export const Route = createFileRoute("/test")({
+export const Route = createFileRoute("/test/$sessionId")({
+  loader: ({ context: { queryClient }, params: { sessionId } }) => {
+    return queryClient.ensureQueryData(userExamSessionOptions(sessionId));
+  },
+  pendingComponent: () => (
+    <Spinner
+      fullScreen
+      text="Loading Test Questions. Please Wait ..."
+      size="lg"
+    />
+  ),
+  errorComponent: useErrorRedirect,
   component: TestComponent,
 });
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, MutationCache, QueryCache } from "@tanstack/react-query";
-import toast from "../Toast/toast";
+import toast from "./toast";
 
 function handleError(error: any) {
   console.log("Global error handler triggered:", error); // Debug log
@@ -33,11 +33,8 @@ export const queryClient = new QueryClient({
       retry: 1,
       refetchOnWindowFocus: false,
       // ✅ Enable global error handler for queries
-      useErrorBoundary: false,
     },
-    mutations: {
-      useErrorBoundary: false,
-    },
+    mutations: {},
   },
   mutationCache: new MutationCache({
     onError: (error) => {

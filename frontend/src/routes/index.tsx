@@ -1,25 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useCallback } from "react";
-import Button from "../ui/Buttons/Button";
-import InfoBadge from "../ui/Info/InfoBadge";
-import ConfirmModal from "../ui/Modals/ConfirmModal";
-import {
-  useStartExam,
-  useCheckActiveSession,
-  activeSessionQueryOptions,
-} from "../hooks/useExam";
+import { activeSessionQueryOptions } from "../hooks/useExam";
+import useCheckActiveExam from "../features/home/hooks/useCheckActiveExam";
 import {
   Feature,
   ClipboardIcon,
   ClockIcon,
   StarIcon,
-} from "../components/Features/Features";
+} from "../features/home/components/Features";
+import Button from "../components/ui/Button";
+import InfoBadge from "../components/ui/InfoBadge";
+import ConfirmModal from "../components/ui/ConfirmModal";
 
 // ✅ Properly typed router context
 
 export const Route = createFileRoute("/")({
-  loader: async ({ context }: any) => {
+  loader: async ({ context }) => {
     context.queryClient.prefetchQuery(activeSessionQueryOptions);
     return {};
   },
@@ -27,34 +22,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomeComponent() {
-  const startExam = useStartExam();
-  const { data: activeSession, isLoading } = useCheckActiveSession();
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  const hasActiveSession = activeSession?.has_active_session ?? false;
-
-  // Use useCallback to memoize handlers and prevent unnecessary re-renders
-  const handleStartNewQuizClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-
-      if (hasActiveSession) {
-        setShowConfirmModal(true);
-      } else {
-        startExam.mutate();
-      }
-    },
-    [hasActiveSession, startExam]
-  );
-
-  const handleConfirmNewQuiz = useCallback(() => {
-    setShowConfirmModal(false);
-    startExam.mutate();
-  }, [startExam]);
-
-  const handleCancelNewQuiz = useCallback(() => {
-    setShowConfirmModal(false);
-  }, []);
+  const page = useCheckActiveExam();
 
   return (
     <>
@@ -83,29 +51,29 @@ function HomeComponent() {
           {/* CTA Buttons */}
           <nav className="pt-4 flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
-              text="Start New Quiz"
+              text={page.isStarting ? "Starting..." : "Start New Quiz"}
               variant="primary"
               icon="arrow"
-              onClick={handleStartNewQuizClick}
+              onClick={page.handleStartNewQuizClick}
             />
 
-            {hasActiveSession && activeSession?.session_id && (
+            {page.hasActiveSession && page.activeSession?.session_id && (
               <Button
                 text="Resume Quiz"
                 variant="secondary"
                 icon="resume"
-                search={{ sessionId: activeSession.session_id }}
+                search={{ sessionId: page.activeSession.session_id }}
               />
             )}
           </nav>
 
           {/* Info badge if quiz can be resumed */}
-          {!isLoading && hasActiveSession && (
+          {!page.isLoading && page.hasActiveSession && (
             <InfoBadge text="You have an unfinished quiz. Resume to continue where you left off!" />
           )}
 
           {/* Loading state message */}
-          {isLoading && (
+          {page.isLoading && (
             <p className="text-sm text-indigo-600 animate-pulse" role="status">
               Checking for existing sessions...
             </p>
@@ -119,12 +87,11 @@ function HomeComponent() {
           </aside>
         </div>
       </main>
-
       {/* Confirm Modal */}
       <ConfirmModal
-        isOpen={showConfirmModal}
-        onConfirm={handleConfirmNewQuiz}
-        onCancel={handleCancelNewQuiz}
+        isOpen={page.showConfirmModal}
+        onConfirm={page.handleConfirmNewQuiz}
+        onCancel={page.handleCancelNewQuiz}
         title="Start New Quiz?"
         message="You have an active exam session. Starting a new quiz will abandon your current progress. Continue?"
         confirmText="Start New Quiz"

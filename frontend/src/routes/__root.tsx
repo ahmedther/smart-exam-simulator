@@ -1,8 +1,14 @@
-import { createRootRoute } from "@tanstack/react-router";
+import { createRootRouteWithContext } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Outlet } from "@tanstack/react-router";
-import NavigationLayout from "../layouts/NavigationLayout";
-import FooterLayout from "../layouts/FooterLayout";
+import NavigationLayout from "../features/navigation/layouts/NavigationLayout";
+import FooterLayout from "../components/layouts/FooterLayout";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { QueryClient } from "@tanstack/react-query";
+
+interface RouterContext {
+  queryClient: QueryClient;
+}
 
 const RootLayout = () => {
   return (
@@ -11,8 +17,11 @@ const RootLayout = () => {
       <Outlet />
       <FooterLayout />
       <TanStackRouterDevtools />
+      <ReactQueryDevtools initialIsOpen={false} />
     </>
   );
 };
 
-export const Route = createRootRoute({ component: RootLayout });
+export const Route = createRootRouteWithContext<RouterContext>()({
+  component: () => <RootLayout />,
+});

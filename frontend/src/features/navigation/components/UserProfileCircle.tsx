@@ -1,5 +1,5 @@
-import profilePic from "../../assets/profile.jpg";
-import GradientText from "../../ui/Texts/GradientText";
+import GradientText from "../../../components/ui/GradientText";
+import profilePic from "../../../assets/profile.jpg";
 
 export default function UserProfileCircle() {
   return (

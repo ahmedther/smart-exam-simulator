@@ -1,6 +1,6 @@
-import Hero from "../components/NavComponents/Hero";
-import NavLinkBar from "../components/NavComponents/NavLinkBar";
-import UserProfileCircle from "../components/NavComponents/UserProfileCircle";
+import Hero from "../components/Hero";
+import NavLinkBar from "../components/NavLinkBar";
+import UserProfileCircle from "../components/UserProfileCircle";
 
 export default function NavigationLayout() {
   return (

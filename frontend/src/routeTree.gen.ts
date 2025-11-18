@@ -9,18 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TestRouteImport } from './routes/test'
-import { Route as ReportRouteImport } from './routes/report'
+import { Route as ResultsRouteImport } from './routes/results'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TestSessionIdRouteImport } from './routes/test.$sessionId'
+import { Route as ExamSessionIdRouteImport } from './routes/exam.$sessionId'
 
-const TestRoute = TestRouteImport.update({
-  id: '/test',
-  path: '/test',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportRoute = ReportRouteImport.update({
-  id: '/report',
-  path: '/report',
+const ResultsRoute = ResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -28,51 +24,58 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TestSessionIdRoute = TestSessionIdRouteImport.update({
+  id: '/test/$sessionId',
+  path: '/test/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExamSessionIdRoute = ExamSessionIdRouteImport.update({
+  id: '/exam/$sessionId',
+  path: '/exam/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/report': typeof ReportRoute
-  '/test': typeof TestRoute
+  '/results': typeof ResultsRoute
+  '/exam/$sessionId': typeof ExamSessionIdRoute
+  '/test/$sessionId': typeof TestSessionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/report': typeof ReportRoute
-  '/test': typeof TestRoute
+  '/results': typeof ResultsRoute
+  '/exam/$sessionId': typeof ExamSessionIdRoute
+  '/test/$sessionId': typeof TestSessionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/report': typeof ReportRoute
-  '/test': typeof TestRoute
+  '/results': typeof ResultsRoute
+  '/exam/$sessionId': typeof ExamSessionIdRoute
+  '/test/$sessionId': typeof TestSessionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/report' | '/test'
+  fullPaths: '/' | '/results' | '/exam/$sessionId' | '/test/$sessionId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/report' | '/test'
-  id: '__root__' | '/' | '/report' | '/test'
+  to: '/' | '/results' | '/exam/$sessionId' | '/test/$sessionId'
+  id: '__root__' | '/' | '/results' | '/exam/$sessionId' | '/test/$sessionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ReportRoute: typeof ReportRoute
-  TestRoute: typeof TestRoute
+  ResultsRoute: typeof ResultsRoute
+  ExamSessionIdRoute: typeof ExamSessionIdRoute
+  TestSessionIdRoute: typeof TestSessionIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/test': {
-      id: '/test'
-      path: '/test'
-      fullPath: '/test'
-      preLoaderRoute: typeof TestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/report': {
-      id: '/report'
-      path: '/report'
-      fullPath: '/report'
-      preLoaderRoute: typeof ReportRouteImport
+    '/results': {
+      id: '/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof ResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -82,13 +85,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/test/$sessionId': {
+      id: '/test/$sessionId'
+      path: '/test/$sessionId'
+      fullPath: '/test/$sessionId'
+      preLoaderRoute: typeof TestSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exam/$sessionId': {
+      id: '/exam/$sessionId'
+      path: '/exam/$sessionId'
+      fullPath: '/exam/$sessionId'
+      preLoaderRoute: typeof ExamSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ReportRoute: ReportRoute,
-  TestRoute: TestRoute,
+  ResultsRoute: ResultsRoute,
+  ExamSessionIdRoute: ExamSessionIdRoute,
+  TestSessionIdRoute: TestSessionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

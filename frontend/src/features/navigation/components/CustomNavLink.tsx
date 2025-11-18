@@ -3,13 +3,28 @@ import { motion } from "framer-motion";
 
 type Props = {
   text: string;
-  to: string;
+  to?: string;
+  onClick?: (e: React.MouseEvent) => void;
+  preventNavigation?: boolean;
 };
 
-export default function CustomNavLink({ text, to }: Props) {
+export default function CustomNavLink({
+  text,
+  to,
+  onClick,
+  preventNavigation = false,
+}: Props) {
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      if (preventNavigation) {
+        e.preventDefault(); // Prevent navigation, only run onClick
+      }
+      onClick(e);
+    }
+  };
   return (
-    <Link to={to} className="w-full h-full">
-      {({ isActive }) => (
+    <Link to={to} className="w-full h-full" onClick={handleClick}>
+      {({ isActive }: { isActive: boolean }) => (
         <motion.div
           className={`relative flex items-center justify-center text-xl w-full h-full px-6 py-3 rounded-xl overflow-hidden ${
             isActive ? "text-on-tertiary-container bg-white" : "text-white"

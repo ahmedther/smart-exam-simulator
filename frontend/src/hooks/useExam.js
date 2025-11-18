@@ -28,13 +28,12 @@ export function useStartExam() {
 
       // Navigate to test page with session ID
       navigate({
-        to: "/test/$sessionId",
+        to: "/exam/$sessionId",
         params: { sessionId: data.session.session_id },
       });
     },
     onError: (error) => {
       console.error("Failed to start exam:", error);
-      alert("Failed to start exam. Please try again.");
     },
   });
 }
@@ -42,7 +41,7 @@ export function useStartExam() {
 export const activeSessionQueryOptions = {
   queryKey: ["active-session"],
   queryFn: () => examApi.checkActiveSession(getBrowserFingerprint()),
-  staleTime: 0,
+  staleTime: 5 * 60 * 100,
 };
 
 // ✅ Hook now uses the exported options
@@ -51,14 +50,16 @@ export function useCheckActiveSession() {
   return useQuery(activeSessionQueryOptions);
 }
 
+export const userExamSessionOptions = (sessionId) => ({
+  queryKey: ["exam-session", sessionId],
+  queryFn: () => examApi.resumeSession(sessionId),
+  enabled: !!sessionId,
+  staleTime: Infinity, // Don't refetch unless explicitly invalidated
+});
+
 // Hook to get exam session data
 export function useExamSession(sessionId) {
-  return useQuery({
-    queryKey: ["exam-session", sessionId],
-    queryFn: () => examApi.resumeSession(sessionId),
-    enabled: !!sessionId,
-    staleTime: Infinity, // Don't refetch unless explicitly invalidated
-  });
+  return useQuery(userExamSessionOptions);
 }
 
 // Hook to submit answer
