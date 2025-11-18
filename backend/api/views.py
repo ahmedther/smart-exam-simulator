@@ -123,6 +123,8 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
                 "question", "question__category", "category"
             ).all()
 
+            # print(ExamQuestionSerializer(exam_questions, many=True).data)
+
             return Response(
                 {
                     "session": ExamSessionSerializer(session).data,

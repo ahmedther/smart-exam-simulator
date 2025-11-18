@@ -209,7 +209,6 @@ function Demo() {
       <ConfirmModal
         isOpen={isOpen}
         onConfirm={() => {
-          console.log("Confirmed!");
           setIsOpen(false);
         }}
         onCancel={() => setIsOpen(false)}

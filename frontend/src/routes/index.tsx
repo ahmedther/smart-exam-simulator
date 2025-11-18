@@ -57,12 +57,12 @@ function HomeComponent() {
               onClick={page.handleStartNewQuizClick}
             />
 
-            {page.hasActiveSession && page.activeSession?.session_id && (
+            {page.hasActiveSession && page.data?.session_id && (
               <Button
                 text="Resume Quiz"
                 variant="secondary"
                 icon="resume"
-                search={{ sessionId: page.activeSession.session_id }}
+                onClick={page.handleResumeQuiz}
               />
             )}
           </nav>

@@ -74,6 +74,22 @@ class Question(models.Model):
         """Helper to get any choice text by letter"""
         return getattr(self, f"choice_{choice_letter}", "")
 
+    class Meta:
+        ordering = ["category", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "question_text",
+                    "choice_a",
+                    "choice_b",
+                    "choice_c",
+                    "choice_d",
+                ],
+                name="unique_complete_question",
+                violation_error_message="A question and answers with this text already exists.",
+            )
+        ]
+
 
 class ExamSession(models.Model):
     """

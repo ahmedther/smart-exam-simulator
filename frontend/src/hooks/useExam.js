@@ -41,7 +41,6 @@ export function useStartExam() {
 export const activeSessionQueryOptions = {
   queryKey: ["active-session"],
   queryFn: () => examApi.checkActiveSession(getBrowserFingerprint()),
-  staleTime: 5 * 60 * 100,
 };
 
 // ✅ Hook now uses the exported options
@@ -54,7 +53,9 @@ export const userExamSessionOptions = (sessionId) => ({
   queryKey: ["exam-session", sessionId],
   queryFn: () => examApi.resumeSession(sessionId),
   enabled: !!sessionId,
-  staleTime: Infinity, // Don't refetch unless explicitly invalidated
+  refetchOnWindowFocus: true,
+  refetchOnMount: true,
+  refetchOnReconnect: true,
 });
 
 // Hook to get exam session data
