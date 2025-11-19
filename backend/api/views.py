@@ -29,7 +29,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     GET /api/categories/{id}/ - Get category details
     """
 
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by("id")
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
 
@@ -122,8 +122,6 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
             exam_questions = session.exam_questions.select_related(
                 "question", "question__category", "category"
             ).all()
-
-            # print(ExamQuestionSerializer(exam_questions, many=True).data)
 
             return Response(
                 {

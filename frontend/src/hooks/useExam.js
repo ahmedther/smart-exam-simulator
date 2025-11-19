@@ -63,6 +63,18 @@ export function useExamSession(sessionId) {
   return useQuery(userExamSessionOptions);
 }
 
+export function useCategories() {
+  return useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const response = await examApi.getCategories();
+      return response.results; // Extract results in the hook
+    },
+    staleTime: Infinity,
+    cacheTime: Infinity,
+  });
+}
+
 // Hook to submit answer
 export function useSubmitAnswer() {
   const queryClient = useQueryClient();

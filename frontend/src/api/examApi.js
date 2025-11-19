@@ -20,7 +20,8 @@ async function apiFetch(endpoint, options = {}) {
 
   // const data = await response.json();
   // await new Promise((resolve) => setTimeout(resolve, 2000));
-
+  // console.log("first");
+  // console.log(data);
   // data.has_active_session = true;
   // return data;
 
@@ -29,6 +30,10 @@ async function apiFetch(endpoint, options = {}) {
 
 // API Functions
 export const examApi = {
+  /**
+   * Get all categories
+   * @returns {Promise<{count: number, next: string|null, previous: string|null, results: Array}>}
+   */
   // Start a new exam session
   startExam: async (browserFingerprint) => {
     return apiFetch("/exam-sessions/start/", {

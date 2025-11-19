@@ -29,7 +29,7 @@ export default function ExamHeader() {
           <span className="text-sm text-gray-500 mb-2">Question Progress</span>
           <div className="flex items-baseline gap-1">
             <span className="text-3xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              {currentQuestionIndex}
+              {currentQuestionIndex + 1}
             </span>
             <span className="text-xl text-gray-400">/</span>
             <span className="text-xl text-gray-600">

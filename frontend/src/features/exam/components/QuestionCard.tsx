@@ -1,6 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useExamStore } from "../stores/examStore";
 import NavigationButtons from "./NavigationButtons";
+import { capitalizeFirst } from "../../../utils/string";
+import Spinner from "../../../components/ui/Spinner";
+import { useCategories } from "../../../hooks/useExam";
+import type { Category } from "../../../types";
 
 export default function QuestionCard() {
   const currentQuestion = useExamStore((s) => s.getCurrentQuestion());
@@ -10,43 +15,27 @@ export default function QuestionCard() {
   const currentQuestionIndex = useExamStore(
     (s) => s.state.currentQuestionIndex
   );
-  console.log(currentQuestion)
 
-  const [selectedCategory, setSelectedCategory] = useState(
-    "Assessment and Diagnosis"
-  );
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
-  // Sample question data
-  const question = {
-    text: "The best predictor of treatment outcome among adult substance abusers is:",
-    options: [
-      { id: "a", text: "age" },
-      { id: "b", text: "ethnicity" },
-      { id: "c", text: "history of criminal behavior" },
-      { id: "d", text: "severity of substance abuse problems" },
-    ],
-  };
-
   const selectedAnswer = currentAnswer?.selectedOptionId;
-  const categories = [
-    "Assessment and Diagnosis",
-    "Treatment Planning",
-    "Counseling",
-    "Professional Responsibility",
-    "Ethics",
-    "Case Management",
-  ];
 
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
+  const choices = ["a", "b", "c", "d"] as const;
+
+  const { data: categories = [] } = useCategories() as { data: Category[] };
+
+  const handleCategoryChange = (value: string) => {
     // Resume timer when category is selected
-
+    console.log(value);
     // Auto-hide after 2 seconds
     setTimeout(() => {
       setShowCategoryDropdown(false);
     }, 2000);
   };
+
+  if (!currentQuestion) {
+    return <Spinner text="Loading Questions..." size="lg" />;
+  }
 
   return (
     <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl p-8 shadow-lg">
@@ -87,13 +76,11 @@ export default function QuestionCard() {
               />
             </svg>
             <span className="text-sm font-semibold text-indigo-900">
-              {selectedCategory}
+              {currentQuestion.category_name}
             </span>
             <button
               onClick={() => {
-                // useExamStore
-                //   .getState()
-                //   .toggleCategoryDropdown(currentQuestion.category_id);
+                setShowCategoryDropdown(!showCategoryDropdown);
               }}
               className="ml-2 p-1 hover:bg-indigo-100 rounded transition-colors duration-200"
               title="Edit category"
@@ -121,13 +108,13 @@ export default function QuestionCard() {
                 Correct the Question Category:
               </label>
               <select
-                value={selectedCategory}
+                value={currentQuestion.category_name}
                 onChange={(e) => handleCategoryChange(e.target.value)}
                 className="w-full p-3 rounded-lg border-2 border-indigo-300 focus:border-indigo-600 focus:outline-none bg-white text-gray-800 font-medium"
               >
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
                   </option>
                 ))}
               </select>
@@ -140,18 +127,18 @@ export default function QuestionCard() {
       </div>
 
       {/* Question Text */}
-      <h2 className="text-2xl font-bold text-gray-800 mb-8 leading-relaxed">
-        {"No question text"}
+      <h2 className="text-2xl font-bold text-gray-800 mb-8 leading-relaxed ">
+        {capitalizeFirst(currentQuestion?.question_text.trim())}
       </h2>
 
       {/* Answer Options */}
       <div className="space-y-4">
-        {question.options.map((option) => (
+        {choices.map((letter) => (
           <button
-            key={option.id}
-            onClick={() => selectAnswer(option.id)}
+            key={letter}
+            onClick={() => selectAnswer(letter)}
             className={`w-full text-left p-5 rounded-xl border-2 transition-all duration-200 ${
-              selectedAnswer === option
+              selectedAnswer === letter
                 ? "border-indigo-600 bg-linear-to-r from-indigo-50 to-purple-50 shadow-md scale-[1.02]"
                 : "border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/50"
             }`}
@@ -160,12 +147,12 @@ export default function QuestionCard() {
               {/* Radio Circle */}
               <div
                 className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
-                  selectedAnswer === option.id
+                  selectedAnswer === letter
                     ? "border-indigo-600 bg-indigo-600"
                     : "border-gray-300"
                 }`}
               >
-                {selectedAnswer === option.id && (
+                {selectedAnswer === letter && (
                   <div className="w-2.5 h-2.5 bg-white rounded-full" />
                 )}
               </div>
@@ -173,15 +160,15 @@ export default function QuestionCard() {
               {/* Option Content */}
               <div className="flex items-center gap-3 flex-1">
                 <span className="text-lg font-bold text-indigo-600">
-                  {option.id}.
+                  {letter.toUpperCase()}.
                 </span>
-                <span className="text-lg text-gray-700 font-medium">
-                  {option.text}
+                <span className="text-lg text-gray-700 font-medium ">
+                  {capitalizeFirst(currentQuestion[`choice_${letter}`].trim())}
                 </span>
               </div>
 
               {/* Selected Checkmark */}
-              {selectedAnswer === option.id && (
+              {selectedAnswer === letter && (
                 <svg
                   className="w-6 h-6 text-indigo-600 shrink-0"
                   fill="currentColor"
