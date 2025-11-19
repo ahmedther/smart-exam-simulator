@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useExamStore } from "../stores/examStore";
 import NavigationButtons from "./NavigationButtons";
