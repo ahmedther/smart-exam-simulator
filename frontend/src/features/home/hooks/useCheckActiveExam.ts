@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useCheckActiveSession, useStartExam } from "../../../hooks/useExam";
+import { useCheckActiveSession, useStartExam } from "../../exam/hooks/useExam";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useExamStore } from "../../exam/stores/examStore";
 

@@ -19,6 +19,7 @@ export interface ExamState {
   isPaused: boolean;
   questionStartTime: number;
   totalTimeSpent: number;
+  remainingTime: number;
 }
 
 /**
@@ -39,6 +40,7 @@ export type ExamAction =
     }
   | { type: "UPDATE_TIME"; timeSpent: number }
   | { type: "UPDATE_TOTAL_TIME"; seconds: number }
+  | { type: "DECREMENT_TIME" }
   | { type: "CLEAR_ANSWER"; questionId: string }
   | { type: "RESET_EXAM" }
   | { type: "SUBMIT_EXAM"; finalTimeSpent: number }

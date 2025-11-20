@@ -3,7 +3,7 @@ type ToastType = "success" | "error" | "info" | "warning";
 interface Toast {
   id: string;
   type: ToastType;
-  message: string;
+  message: string | React.ReactNode;
   title?: string;
 }
 
@@ -20,7 +20,12 @@ class ToastManager {
     this.listeners.forEach((listener) => listener([...this.toasts]));
   }
 
-  show(type: ToastType, message: string, title?: string, duration = 5000) {
+  show(
+    type: ToastType,
+    message: string | React.ReactNode,
+    title?: string,
+    duration = 5000
+  ) {
     const id = Math.random().toString(36).substr(2, 9);
     const toast: Toast = { id, type, message, title };
 

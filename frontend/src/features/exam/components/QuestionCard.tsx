@@ -1,65 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useRef, useState } from "react";
-import { useExamStore } from "../stores/examStore";
 import { AnimatePresence, motion } from "framer-motion";
 import NavigationButtons from "./NavigationButtons";
 import { capitalizeFirst } from "../../../utils/string";
 import Spinner from "../../../components/ui/Spinner";
-import { useCategories, useChangeCategory } from "../../../hooks/useExam";
-import { useClickOutside } from "../hooks/useClickOutside";
-import type { Category } from "../../../types";
-import toast from "../../../utils/toast";
+import useQuestionCardrefs from "../hooks/useQuestionCardrefs";
 
 export default function QuestionCard() {
-  const currentQuestion = useExamStore((s) => s.getCurrentQuestion());
-  const currentAnswer = useExamStore((s) => s.getCurrentAnswer());
-  const isMarked = useExamStore((s) => s.isCurrentMarked());
-  const selectAnswer = useExamStore((s) => s.selectAnswer);
-  const selectedAnswer = currentAnswer?.selectedOptionId;
-  const currentQuestionIndex = useExamStore(
-    (s) => s.state.currentQuestionIndex
-  );
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const choices = ["a", "b", "c", "d"] as const;
-  const { data: categories = [] } = useCategories() as { data: Category[] };
-  const changeCategory = useChangeCategory() as any;
+  const page = useQuestionCardrefs();
 
-  useClickOutside(
-    dropdownRef,
-    () => {
-      setShowCategoryDropdown(false);
-      changeCategory.reset();
-    },
-    showCategoryDropdown
-  );
-
-  // console.log(currentQuestion);
-
-  const handleCategoryChange = (newCategoryId: string) => {
-    if (newCategoryId === "0") return;
-
-    if (currentQuestion!.category_id !== parseInt(newCategoryId)) {
-      changeCategory.mutate({
-        questionId: currentQuestion!.question_id,
-        newCategoryId: newCategoryId,
-      });
-    } else {
-      toast.info(
-        `Category not changed! Question already belongs to ${
-          currentQuestion!.category_name
-        }`
-      );
-    }
-
-    // Auto-hide after 2 seconds
-    setTimeout(() => {
-      setShowCategoryDropdown(false);
-      changeCategory.reset();
-    }, 2000);
-  };
-
-  if (!currentQuestion) {
+  if (!page.currentQuestion) {
     return <Spinner text="Loading Questions..." size="lg" />;
   }
 
@@ -69,9 +17,9 @@ export default function QuestionCard() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <div className="inline-block px-4 py-1.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-full text-sm font-semibold">
-            Question {currentQuestionIndex + 1}
+            Question {page.currentQuestionIndex + 1}
           </div>
-          {isMarked && (
+          {page.isMarked && (
             <div className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-full text-sm font-semibold">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path
@@ -86,7 +34,7 @@ export default function QuestionCard() {
         </div>
 
         {/* Category Display with Edit Button */}
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative" ref={page.dropdownRef}>
           <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-200">
             <svg
               className="w-5 h-5 text-indigo-600"
@@ -102,10 +50,10 @@ export default function QuestionCard() {
               />
             </svg>
             <span className="text-sm font-semibold text-indigo-900">
-              {currentQuestion.category_name}
+              {page.currentQuestion.category_name}
             </span>
             <button
-              onClick={() => setShowCategoryDropdown((prev) => !prev)}
+              onClick={() => page.setShowCategoryDropdown((prev) => !prev)}
               className="ml-2 p-1 hover:bg-indigo-100 rounded transition-colors duration-200"
               title="Edit category"
             >
@@ -127,7 +75,7 @@ export default function QuestionCard() {
 
           {/* Category Dropdown - positioned relative to category badge */}
           <AnimatePresence>
-            {showCategoryDropdown && (
+            {page.showCategoryDropdown && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: -10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -140,36 +88,36 @@ export default function QuestionCard() {
                 </label>
                 <select
                   defaultValue="0"
-                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  onChange={(e) => page.handleCategoryChange(e.target.value)}
                   className="w-full p-3 rounded-lg border-2 border-indigo-300 focus:border-indigo-600 focus:outline-none bg-white text-gray-800 font-medium"
                 >
                   <option value={"0"}>-- Select a category --</option>
-                  {categories.map((cat) => (
+                  {page.categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
                     </option>
                   ))}
                 </select>
-                {!changeCategory.isPending &&
-                  !changeCategory.isSuccess &&
-                  !changeCategory.isError && (
+                {!page.changeCategory.isPending &&
+                  !page.changeCategory.isSuccess &&
+                  !page.changeCategory.isError && (
                     <p className="mt-2 text-xs text-indigo-600">
                       ✓ Will auto-close in a moment...
                     </p>
                   )}
-                {changeCategory.isPending && (
+                {page.changeCategory.isPending && (
                   <p className="mt-2 text-xs font-bold text-indigo-600">
                     ⏳ Updating category...
                   </p>
                 )}
 
-                {changeCategory.isSuccess && (
+                {page.changeCategory.isSuccess && (
                   <p className="mt-2 text-xs font-bold text-green-600">
                     ✓ Category updated! Closing...
                   </p>
                 )}
 
-                {changeCategory.isError && (
+                {page.changeCategory.isError && (
                   <p className="mt-2 text-xs font-bold text-red-600">
                     ✗ Failed to update. Please try again.
                   </p>
@@ -182,17 +130,17 @@ export default function QuestionCard() {
 
       {/* Question Text */}
       <h2 className="text-2xl font-bold text-gray-800 mb-8 leading-relaxed ">
-        {capitalizeFirst(currentQuestion?.question_text.trim())}
+        {capitalizeFirst(page.currentQuestion?.question_text.trim())}
       </h2>
 
       {/* Answer Options */}
       <div className="space-y-4">
-        {choices.map((letter) => (
+        {page.choices.map((letter) => (
           <button
             key={letter}
-            onClick={() => selectAnswer(letter)}
+            onClick={() => page.selectAnswer(letter)}
             className={`w-full text-left p-5 rounded-xl border-2 transition-all duration-200 ${
-              selectedAnswer === letter
+              page.selectedAnswer === letter
                 ? "border-indigo-600 bg-linear-to-r from-indigo-50 to-purple-50 shadow-md scale-[1.02]"
                 : "border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/50"
             }`}
@@ -201,12 +149,12 @@ export default function QuestionCard() {
               {/* Radio Circle */}
               <div
                 className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
-                  selectedAnswer === letter
+                  page.selectedAnswer === letter
                     ? "border-indigo-600 bg-indigo-600"
                     : "border-gray-300"
                 }`}
               >
-                {selectedAnswer === letter && (
+                {page.selectedAnswer === letter && (
                   <div className="w-2.5 h-2.5 bg-white rounded-full" />
                 )}
               </div>
@@ -217,12 +165,14 @@ export default function QuestionCard() {
                   {letter.toUpperCase()}.
                 </span>
                 <span className="text-lg text-gray-700 font-medium ">
-                  {capitalizeFirst(currentQuestion[`choice_${letter}`].trim())}
+                  {capitalizeFirst(
+                    page.currentQuestion![`choice_${letter}`].trim()
+                  )}
                 </span>
               </div>
 
               {/* Selected Checkmark */}
-              {selectedAnswer === letter && (
+              {page.selectedAnswer === letter && (
                 <svg
                   className="w-6 h-6 text-indigo-600 shrink-0"
                   fill="currentColor"

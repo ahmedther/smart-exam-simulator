@@ -4,7 +4,7 @@ import toast from "../../utils/toast";
 interface Toast {
   id: string;
   type: "success" | "error" | "info" | "warning";
-  message: string;
+  message: string | React.ReactNode;
   title?: string;
 }
 
@@ -145,7 +145,7 @@ function ToastItem({
               {t.title}
             </p>
           )}
-          <p className="text-sm leading-relaxed opacity-90">{t.message}</p>
+          <div className="text-sm leading-relaxed opacity-90">{t.message}</div>
         </div>
         <button
           onClick={(e) => {

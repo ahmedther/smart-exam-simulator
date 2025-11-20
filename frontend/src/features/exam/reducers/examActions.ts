@@ -46,7 +46,9 @@ export const examActions = {
   togglePause: (): ExamAction => ({
     type: "TOGGLE_PAUSE",
   }),
-
+  decrementTime: (): ExamAction => ({
+    type: "DECREMENT_TIME",
+  }),
   /**
    * Navigate to a specific question by number
    */

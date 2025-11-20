@@ -1,11 +1,10 @@
 // src/hooks/useExam.js
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { examApi } from "../api/examApi";
+import { examApi } from "../../../api/examApi";
 import { useNavigate } from "@tanstack/react-router";
-import toast from "../utils/toast";
-import { useExamStore } from "../features/exam/stores/examStore";
-import { use } from "react";
-import { data } from "framer-motion/client";
+import toast from "../../../utils/toast";
+import { useExamStore } from "../stores/examStore";
+import React from "react";
 
 // Get browser fingerprint (you can use a library like fingerprintjs2 for better implementation)
 const getBrowserFingerprint = () => {
@@ -94,7 +93,22 @@ export function useChangeCategory() {
       examApi.changeCategory(questionId, newCategoryId),
     onSuccess: (data) => {
       toast.success(
-        `${data.message} from ${data.old_category} --> To -->  ${data.new_category}`
+        React.createElement(
+          React.Fragment,
+          null,
+          data.message + " from ",
+          React.createElement(
+            "span",
+            { className: "line-through text-red-600" },
+            data.old_category
+          ),
+          " To ",
+          React.createElement(
+            "span",
+            { className: "font-semibold text-green-600" },
+            data.new_category
+          )
+        )
       );
 
       // Update the specific question in Tanstack Query cache

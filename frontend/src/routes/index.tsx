@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { activeSessionQueryOptions } from "../hooks/useExam";
+import { activeSessionQueryOptions } from "../features/exam/hooks/useExam";
 import useCheckActiveExam from "../features/home/hooks/useCheckActiveExam";
 import {
   Feature,

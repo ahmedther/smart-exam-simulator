@@ -34,6 +34,7 @@ interface Session {
 }
 
 interface ExamStore {
+  decrementTime: () => void;
   // Core state
   state: ExamState;
   sessionId: string;

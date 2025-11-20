@@ -10,6 +10,7 @@ export const createInitialExamState = (): ExamState => ({
   isPaused: false,
   questionStartTime: Date.now(),
   totalTimeSpent: 0,
+  remainingTime: 0,
 });
 
 /**
@@ -158,6 +159,23 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
       return {
         ...state,
         totalTimeSpent: state.totalTimeSpent + action.seconds,
+      };
+    }
+
+    case "DECREMENT_TIME": {
+      const newRemainingTime = Math.max(0, state.remainingTime - 1);
+      // Auto-pause when time runs out
+      if (newRemainingTime === 0 && !state.isPaused) {
+        return {
+          ...state,
+          remainingTime: 0,
+          isPaused: true,
+        };
+      }
+
+      return {
+        ...state,
+        remainingTime: newRemainingTime,
       };
     }
 

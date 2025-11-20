@@ -8,6 +8,7 @@ import {
   type ExamAction,
 } from "../reducers";
 import type { ExamStore } from "./examStoreType";
+import toast from "../../../utils/toast";
 
 export const useExamStore = create<ExamStore>()(
   devtools(
@@ -71,6 +72,8 @@ export const useExamStore = create<ExamStore>()(
               isPaused: false,
               questionStartTime: Date.now(),
               totalTimeSpent: session.total_time_spent,
+              remainingTime: session.remaining_time,
+              // remainingTime: 5,
             },
           });
         },
@@ -146,6 +149,18 @@ export const useExamStore = create<ExamStore>()(
 
         togglePause: () => {
           get().dispatch(examActions.togglePause());
+        },
+        decrementTime: () => {
+          get().dispatch(examActions.decrementTime());
+
+          // Optional: Trigger auto-submit when time reaches 0
+          const { state } = get();
+          if (state.remainingTime === 600) toast.info("10 minutes left!");
+          if (state.remainingTime === 300) toast.info("5 minutes left!");
+          if (state.remainingTime === 60) toast.warning("1 minute left!");
+
+          if (state.remainingTime === 3)
+            toast.warning("Time expired! Auto-submitting score...");
         },
 
         goToQuestion: (index: number) => {
@@ -223,6 +238,7 @@ export const useExamStore = create<ExamStore>()(
             answers: Array.from(state.state.answers.entries()),
             markedQuestions: Array.from(state.state.markedQuestions),
             totalTimeSpent: state.state.totalTimeSpent,
+            remainingTime: state.state.remainingTime,
           },
         }),
       }

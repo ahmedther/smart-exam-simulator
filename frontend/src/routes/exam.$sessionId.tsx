@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import ExamHeader from "../features/exam/components/ExamHeader";
-import { userExamSessionOptions } from "../hooks/useExam";
+import { userExamSessionOptions } from "../features/exam/hooks/useExam";
 import Spinner from "../components/ui/Spinner";
 import { useExamStore } from "../features/exam/stores/examStore";
 import { useEffect } from "react";
 import QuestionCard from "../features/exam/components/QuestionCard";
 import MarkedQuestionsPanel from "../features/exam/components/MarkedQuestionsPanel";
+import TimeUpCard from "../features/exam/components/TimeUpCard";
 
 export const Route = createFileRoute("/exam/$sessionId")({
   loader: ({ context: { queryClient }, params: { sessionId } }) => {
@@ -24,18 +25,34 @@ export const Route = createFileRoute("/exam/$sessionId")({
 function ExamComponent() {
   const data = Route.useLoaderData();
   const initialize = useExamStore((s) => s.initialize);
+  const remainingTime = useExamStore((s) => s.state.remainingTime);
 
   useEffect(() => {
     initialize(data);
   }, [data, initialize]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="max-w-5xl w-full space-y-6">
+    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Header */}
         <ExamHeader />
+
         <MarkedQuestionsPanel />
-        <QuestionCard />
+        {/* ✅ Disable entire exam interface when time expires */}
+        <div
+          className={`transition-all duration-300 ${
+            remainingTime <= 0
+              ? "pointer-events-none opacity-40 select-none"
+              : ""
+          }`}
+        >
+          <QuestionCard />
+        </div>
+
+        {/* ✅ Show submit button prominently when time expires */}
+        {/* TimeUp Modal with AnimatePresence */}
+        <TimeUpCard isVisible={remainingTime <= 0} />
       </div>
-    </main>
+    </div>
   );
 }
