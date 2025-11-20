@@ -20,9 +20,9 @@ async function apiFetch(endpoint, options = {}) {
 
   // const data = await response.json();
   // await new Promise((resolve) => setTimeout(resolve, 2000));
+  // data.has_active_session = true;
   // console.log("first");
   // console.log(data);
-  // data.has_active_session = true;
   // return data;
 
   return response.json();
@@ -57,6 +57,15 @@ export const examApi = {
     return apiFetch(`/exam-sessions/${sessionId}/resume/`);
   },
 
+  changeCategory: async (questionId, newCategoryId) => {
+    return apiFetch("/questions/update-category/", {
+      method: "PATCH",
+      body: JSON.stringify({
+        question_id: questionId,
+        new_category_id: newCategoryId,
+      }),
+    });
+  },
   // Submit answer
   submitAnswer: async (questionId, userAnswer, timeSpent) => {
     return apiFetch(`/exam-questions/${questionId}/answer/`, {

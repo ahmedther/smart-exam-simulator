@@ -1,34 +1,61 @@
-import { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useRef, useState } from "react";
 import { useExamStore } from "../stores/examStore";
+import { AnimatePresence, motion } from "framer-motion";
 import NavigationButtons from "./NavigationButtons";
 import { capitalizeFirst } from "../../../utils/string";
 import Spinner from "../../../components/ui/Spinner";
-import { useCategories } from "../../../hooks/useExam";
+import { useCategories, useChangeCategory } from "../../../hooks/useExam";
+import { useClickOutside } from "../hooks/useClickOutside";
 import type { Category } from "../../../types";
+import toast from "../../../utils/toast";
 
 export default function QuestionCard() {
   const currentQuestion = useExamStore((s) => s.getCurrentQuestion());
   const currentAnswer = useExamStore((s) => s.getCurrentAnswer());
   const isMarked = useExamStore((s) => s.isCurrentMarked());
   const selectAnswer = useExamStore((s) => s.selectAnswer);
+  const selectedAnswer = currentAnswer?.selectedOptionId;
   const currentQuestionIndex = useExamStore(
     (s) => s.state.currentQuestionIndex
   );
-
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-
-  const selectedAnswer = currentAnswer?.selectedOptionId;
-
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const choices = ["a", "b", "c", "d"] as const;
-
   const { data: categories = [] } = useCategories() as { data: Category[] };
+  const changeCategory = useChangeCategory() as any;
 
-  const handleCategoryChange = (value: string) => {
-    // Resume timer when category is selected
-    console.log(value);
+  useClickOutside(
+    dropdownRef,
+    () => {
+      setShowCategoryDropdown(false);
+      changeCategory.reset();
+    },
+    showCategoryDropdown
+  );
+
+  // console.log(currentQuestion);
+
+  const handleCategoryChange = (newCategoryId: string) => {
+    if (newCategoryId === "0") return;
+
+    if (currentQuestion!.category_id !== parseInt(newCategoryId)) {
+      changeCategory.mutate({
+        questionId: currentQuestion!.question_id,
+        newCategoryId: newCategoryId,
+      });
+    } else {
+      toast.info(
+        `Category not changed! Question already belongs to ${
+          currentQuestion!.category_name
+        }`
+      );
+    }
+
     // Auto-hide after 2 seconds
     setTimeout(() => {
       setShowCategoryDropdown(false);
+      changeCategory.reset();
     }, 2000);
   };
 
@@ -59,7 +86,7 @@ export default function QuestionCard() {
         </div>
 
         {/* Category Display with Edit Button */}
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-200">
             <svg
               className="w-5 h-5 text-indigo-600"
@@ -78,9 +105,7 @@ export default function QuestionCard() {
               {currentQuestion.category_name}
             </span>
             <button
-              onClick={() => {
-                setShowCategoryDropdown(!showCategoryDropdown);
-              }}
+              onClick={() => setShowCategoryDropdown((prev) => !prev)}
               className="ml-2 p-1 hover:bg-indigo-100 rounded transition-colors duration-200"
               title="Edit category"
             >
@@ -101,27 +126,57 @@ export default function QuestionCard() {
           </div>
 
           {/* Category Dropdown - positioned relative to category badge */}
-          {showCategoryDropdown && (
-            <div className="absolute top-full right-0 mt-2 w-80 p-4 bg-white rounded-xl border-2 border-indigo-200 shadow-xl z-10">
-              <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                Correct the Question Category:
-              </label>
-              <select
-                value={currentQuestion.category_name}
-                onChange={(e) => handleCategoryChange(e.target.value)}
-                className="w-full p-3 rounded-lg border-2 border-indigo-300 focus:border-indigo-600 focus:outline-none bg-white text-gray-800 font-medium"
+          <AnimatePresence>
+            {showCategoryDropdown && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="absolute top-full right-0 mt-2 w-80 p-4 bg-white rounded-xl border-2 border-indigo-200 shadow-xl z-10"
               >
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-2 text-xs text-indigo-600">
-                ✓ Will auto-close in a moment...
-              </p>
-            </div>
-          )}
+                <label className="block text-sm font-semibold text-indigo-900 mb-2">
+                  Correct the Question Category:
+                </label>
+                <select
+                  defaultValue="0"
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="w-full p-3 rounded-lg border-2 border-indigo-300 focus:border-indigo-600 focus:outline-none bg-white text-gray-800 font-medium"
+                >
+                  <option value={"0"}>-- Select a category --</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                {!changeCategory.isPending &&
+                  !changeCategory.isSuccess &&
+                  !changeCategory.isError && (
+                    <p className="mt-2 text-xs text-indigo-600">
+                      ✓ Will auto-close in a moment...
+                    </p>
+                  )}
+                {changeCategory.isPending && (
+                  <p className="mt-2 text-xs font-bold text-indigo-600">
+                    ⏳ Updating category...
+                  </p>
+                )}
+
+                {changeCategory.isSuccess && (
+                  <p className="mt-2 text-xs font-bold text-green-600">
+                    ✓ Category updated! Closing...
+                  </p>
+                )}
+
+                {changeCategory.isError && (
+                  <p className="mt-2 text-xs font-bold text-red-600">
+                    ✗ Failed to update. Please try again.
+                  </p>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

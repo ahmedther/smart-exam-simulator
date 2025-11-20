@@ -184,6 +184,19 @@ export const useExamStore = create<ExamStore>()(
           get().dispatch(examActions.submitExam(timeSpent));
         },
 
+        updateQuestionCategory: (
+          questionId: number,
+          categoryId: number,
+          categoryName: string
+        ) =>
+          set((state) => ({
+            questions: state.questions.map((q) =>
+              q.question_id === questionId
+                ? { ...q, category_id: categoryId, category_name: categoryName }
+                : q
+            ),
+          })),
+
         updateStatistics: () => {
           const { state, questions } = get();
           set({

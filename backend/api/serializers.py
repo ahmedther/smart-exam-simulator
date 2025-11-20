@@ -62,6 +62,7 @@ class QuestionListSerializer(serializers.ModelSerializer):
 class ExamQuestionSerializer(serializers.ModelSerializer):
     """Serializer for ExamQuestion - What user sees during exam"""
 
+    question_id = serializers.IntegerField(source="question.id", read_only=True)
     question_text = serializers.CharField(
         source="question.question_text", read_only=True
     )
@@ -69,13 +70,18 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
     choice_b = serializers.CharField(source="question.choice_b", read_only=True)
     choice_c = serializers.CharField(source="question.choice_c", read_only=True)
     choice_d = serializers.CharField(source="question.choice_d", read_only=True)
-    category_id = serializers.IntegerField(source="category.id", read_only=True)
-    category_name = serializers.CharField(source="category.name", read_only=True)
+    category_id = serializers.IntegerField(
+        source="question.category.id", read_only=True
+    )
+    category_name = serializers.CharField(
+        source="question.category.name", read_only=True
+    )
 
     class Meta:
         model = ExamQuestion
         fields = [
             "id",
+            "question_id",
             "question_number",
             "question_text",
             "choice_a",
@@ -90,12 +96,15 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
             "answered_at",
         ]
         read_only_fields = [
+            "question_id",
             "question_number",
             "question_text",
             "choice_a",
             "choice_b",
             "choice_c",
             "choice_d",
+            "category_id",
+            "category_name",
             "answered_at",
         ]
 

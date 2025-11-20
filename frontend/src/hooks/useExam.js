@@ -2,6 +2,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { examApi } from "../api/examApi";
 import { useNavigate } from "@tanstack/react-router";
+import toast from "../utils/toast";
+import { useExamStore } from "../features/exam/stores/examStore";
+import { use } from "react";
+import { data } from "framer-motion/client";
 
 // Get browser fingerprint (you can use a library like fingerprintjs2 for better implementation)
 const getBrowserFingerprint = () => {
@@ -22,11 +26,14 @@ export function useStartExam() {
 
   return useMutation({
     mutationFn: () => examApi.startExam(getBrowserFingerprint()),
+    onMutate: () => {
+      queryClient.clear();
+    },
     onSuccess: (data) => {
       // Cache the exam data
       queryClient.setQueryData(["exam-session", data.session.session_id], data);
+      // ✅ Mark as fresh (not stale)
 
-      // Navigate to test page with session ID
       navigate({
         to: "/exam/$sessionId",
         params: { sessionId: data.session.session_id },
@@ -53,14 +60,17 @@ export const userExamSessionOptions = (sessionId) => ({
   queryKey: ["exam-session", sessionId],
   queryFn: () => examApi.resumeSession(sessionId),
   enabled: !!sessionId,
-  refetchOnWindowFocus: true,
-  refetchOnMount: true,
-  refetchOnReconnect: true,
+  staleTime: Infinity, // ✅ Never consider stale
+  gcTime: Infinity, // ✅ Keep forever
+  refetchOnWindowFocus: false, // ✅ Don't refetch on focus
+  refetchOnMount: false, // ✅ Don't refetch on mount - use cache!
+  refetchOnReconnect: false, // ✅ Don't refetch on reconnect
+  refetchInterval: false, // Don't auto-refetch on interval
 });
 
 // Hook to get exam session data
 export function useExamSession(sessionId) {
-  return useQuery(userExamSessionOptions);
+  return useQuery(userExamSessionOptions(sessionId));
 }
 
 export function useCategories() {
@@ -72,6 +82,50 @@ export function useCategories() {
     },
     staleTime: Infinity,
     cacheTime: Infinity,
+  });
+}
+
+export function useChangeCategory() {
+  const updateQuestionCategory = useExamStore((s) => s.updateQuestionCategory);
+  const sessionId = useExamStore((s) => s.sessionId);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ questionId, newCategoryId }) =>
+      examApi.changeCategory(questionId, newCategoryId),
+    onSuccess: (data) => {
+      toast.success(
+        `${data.message} from ${data.old_category} --> To -->  ${data.new_category}`
+      );
+
+      // Update the specific question in Tanstack Query cache
+      queryClient.setQueryData(["exam-session", sessionId], (old) => {
+        if (!old) return old;
+        console.log(old);
+        return {
+          ...old,
+          questions: old.questions.map((q) =>
+            q.question_id === data.question_id
+              ? {
+                  ...q,
+                  category_id: data.new_category_id,
+                  category_name: data.new_category,
+                }
+              : q
+          ),
+        };
+      });
+
+      // Update the specific question in Zustand Store
+      updateQuestionCategory(
+        data.question_id,
+        data.new_category_id,
+        data.new_category
+      );
+    },
+    onError: (error) => {
+      // Handle error
+      toast.error(`Error changing category: ${error.message}`);
+    },
   });
 }
 

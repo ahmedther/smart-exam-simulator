@@ -3,6 +3,7 @@ import type { ExamAction, ExamState } from "../reducers";
 
 interface Question {
   id: number;
+  question_id: number;
   question_number: number;
   question_text: string;
   choice_a: string;

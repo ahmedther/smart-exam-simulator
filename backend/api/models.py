@@ -195,16 +195,6 @@ class ExamQuestion(models.Model):
     first_viewed_at = models.DateTimeField(null=True, blank=True)
     answered_at = models.DateTimeField(null=True, blank=True)
 
-    # User can override the assumed category
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="exam_questions",
-        help_text="Category assumed by the system (can be corrected by user)",
-    )
-
     # Flag for review
     marked_for_review = models.BooleanField(default=False)
 
