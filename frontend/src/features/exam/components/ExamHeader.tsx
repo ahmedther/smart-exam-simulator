@@ -1,7 +1,8 @@
-import useExamHeaderTimer from "../hooks/useExamHeaderTimer";
+import { useExamHeaderTimer } from "../hooks";
 
 export default function ExamHeader() {
   const page = useExamHeaderTimer();
+
   return (
     <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

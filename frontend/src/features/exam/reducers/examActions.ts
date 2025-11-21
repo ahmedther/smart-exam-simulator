@@ -43,9 +43,15 @@ export const examActions = {
   /**
    * Toggle pause state of the exam
    */
-  togglePause: (): ExamAction => ({
-    type: "TOGGLE_PAUSE",
+  setPause: (
+    isPaused: boolean | "toggle",
+    source: "user" | "system" = "user"
+  ): ExamAction => ({
+    type: "SET_PAUSE",
+    isPaused,
+    source,
   }),
+
   decrementTime: (): ExamAction => ({
     type: "DECREMENT_TIME",
   }),

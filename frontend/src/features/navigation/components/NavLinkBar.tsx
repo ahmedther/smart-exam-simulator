@@ -1,5 +1,5 @@
 import ConfirmModal from "../../../components/ui/ConfirmModal";
-import useCheckActiveExam from "../../home/hooks/useCheckActiveExam";
+import { useCheckActiveExam } from "../../home/hooks";
 import CustomNavLink from "./CustomNavLink";
 
 export default function NavLinkBar() {

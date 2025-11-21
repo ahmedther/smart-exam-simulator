@@ -11,6 +11,7 @@ export const createInitialExamState = (): ExamState => ({
   questionStartTime: Date.now(),
   totalTimeSpent: 0,
   remainingTime: 0,
+  pauseSource: null,
 });
 
 /**
@@ -31,7 +32,12 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
       const newAnswers = new Map(state.answers);
       newAnswers.set(action.questionId, newAnswer);
 
-      return { ...state, answers: newAnswers };
+      return {
+        ...state,
+        answers: newAnswers,
+        isPaused: false,
+        pauseSource: null,
+      };
     }
 
     case "NEXT_QUESTION": {
@@ -50,6 +56,8 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
           answers: newAnswers,
           questionStartTime: Date.now(),
           totalTimeSpent: state.totalTimeSpent + action.timeSpent,
+          isPaused: false,
+          pauseSource: null,
         };
       }
       return {
@@ -57,6 +65,8 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
         currentQuestionIndex: state.currentQuestionIndex + 1,
         questionStartTime: Date.now(),
         totalTimeSpent: state.totalTimeSpent + action.timeSpent,
+        isPaused: false,
+        pauseSource: null,
       };
     }
 
@@ -78,6 +88,8 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
           answers: newAnswers,
           questionStartTime: Date.now(),
           totalTimeSpent: state.totalTimeSpent + action.timeSpent,
+          isPaused: false,
+          pauseSource: null,
         };
       }
       return {
@@ -85,6 +97,8 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
         currentQuestionIndex: state.currentQuestionIndex - 1,
         questionStartTime: Date.now(),
         totalTimeSpent: state.totalTimeSpent + action.timeSpent,
+        isPaused: false,
+        pauseSource: null,
       };
     }
 
@@ -109,10 +123,21 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
 
       return { ...state, markedQuestions: newMarked };
     }
+    case "SET_PAUSE": {
+      const newPaused =
+        action.isPaused === "toggle" ? !state.isPaused : action.isPaused;
 
-    case "TOGGLE_PAUSE":
-      return { ...state, isPaused: !state.isPaused };
+      // Don't override user pause with system
+      if (state.pauseSource === "user" && action.source === "system") {
+        return state;
+      }
 
+      return {
+        ...state,
+        isPaused: newPaused,
+        pauseSource: newPaused ? action.source : null,
+      };
+    }
     case "NAVIGATE_TO": {
       return {
         ...state,
@@ -138,6 +163,8 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
           answers: newAnswers,
           questionStartTime: Date.now(),
           totalTimeSpent: state.totalTimeSpent + action.timeSpent,
+          isPaused: false,
+          pauseSource: null,
         };
       }
       return {
@@ -145,6 +172,8 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
         currentQuestionIndex: action.index,
         questionStartTime: Date.now(),
         totalTimeSpent: state.totalTimeSpent + action.timeSpent,
+        isPaused: false,
+        pauseSource: null,
       };
     }
 

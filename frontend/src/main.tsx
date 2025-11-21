@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "./routeTree.gen";
 import ToastContainer from "./components/ui/ToastContainer";
 import "./index.css";
-import { queryClient } from "./utils/queryClient";
+import { queryClient } from "./utils";
 
 // Create a new router instance
 const router = createRouter({

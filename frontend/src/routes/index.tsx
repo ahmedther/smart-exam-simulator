@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { activeSessionQueryOptions } from "../features/exam/hooks/useExam";
-import useCheckActiveExam from "../features/home/hooks/useCheckActiveExam";
+import { activeSessionQueryOptions } from "../features/exam/hooks";
+import { useCheckActiveExam } from "../features/home/hooks";
 import {
   Feature,
   ClipboardIcon,

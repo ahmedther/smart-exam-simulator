@@ -44,23 +44,23 @@ class ToastManager {
     this.notify();
   }
 
-  success(message: string, title = "Success") {
+  success(message: string | React.ReactNode, title = "Success") {
     return this.show("success", message, title);
   }
 
-  error(message: string, title = "Error") {
+  error(message: string | React.ReactNode, title = "Error") {
     return this.show("error", message, title);
   }
 
-  info(message: string, title = "Info") {
+  info(message: string | React.ReactNode, title = "Info") {
     return this.show("info", message, title);
   }
 
-  warning(message: string, title = "Warning") {
+  warning(message: string | React.ReactNode, title = "Warning") {
     return this.show("warning", message, title);
   }
 }
 
 const toast = new ToastManager();
 
-export default toast;
+export { toast };

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, MutationCache, QueryCache } from "@tanstack/react-query";
-import toast from "./toast";
+import { toast } from "./toast";
 
 function handleError(error: any) {
   console.log("Global error handler triggered:", error); // Debug log

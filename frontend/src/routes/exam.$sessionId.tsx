@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import ExamHeader from "../features/exam/components/ExamHeader";
-import { userExamSessionOptions } from "../features/exam/hooks/useExam";
+import { userExamSessionOptions } from "../features/exam/hooks";
 import Spinner from "../components/ui/Spinner";
 import { useExamStore } from "../features/exam/stores/examStore";
 import { useEffect } from "react";
@@ -26,14 +26,18 @@ function ExamComponent() {
   const data = Route.useLoaderData();
   const initialize = useExamStore((s) => s.initialize);
   const remainingTime = useExamStore((s) => s.state.remainingTime);
+  // const { isSaving, lastSaved } = useAutoSave();
 
   useEffect(() => {
     initialize(data);
   }, [data, initialize]);
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50 px-4">
       <div className="max-w-5xl mx-auto space-y-6">
+        {/* {isSaving && <span>Saving...</span>}
+        {lastSaved && <span>Last saved: {lastSaved.toLocaleTimeString()}</span>} */}
+
         {/* Header */}
         <ExamHeader />
 

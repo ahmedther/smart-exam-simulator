@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, useState } from "react";
 import { useExamStore } from "../stores/examStore";
-import { useCategories, useChangeCategory } from "./useExam";
-import { useClickOutside } from "../hooks/useClickOutside";
+import { useCategories } from "./useCategories";
+import { useChangeCategory, useClickOutside } from "../hooks";
 import type { Category } from "../../../types";
-import toast from "../../../utils/toast";
+import { toast } from "../../../utils";
 
-export default function useQuestionCardrefs() {
+export function useQuestionCardrefs() {
   const currentQuestion = useExamStore((s) => s.getCurrentQuestion());
   const currentAnswer = useExamStore((s) => s.getCurrentAnswer());
   const isMarked = useExamStore((s) => s.isCurrentMarked());
@@ -20,6 +20,8 @@ export default function useQuestionCardrefs() {
   const choices = ["a", "b", "c", "d"] as const;
   const { data: categories = [] } = useCategories() as { data: Category[] };
   const changeCategory = useChangeCategory() as any;
+  const pauseForActivity = useExamStore((s) => s.pauseForActivity);
+  const resumeFromActivity = useExamStore((s) => s.resumeFromActivity);
 
   useClickOutside(
     dropdownRef,
@@ -51,8 +53,14 @@ export default function useQuestionCardrefs() {
     // Auto-hide after 2 seconds
     setTimeout(() => {
       setShowCategoryDropdown(false);
+      resumeFromActivity();
       changeCategory.reset();
     }, 2000);
+  };
+
+  const handleCategoryClick = () => {
+    pauseForActivity();
+    setShowCategoryDropdown(!showCategoryDropdown);
   };
 
   return {
@@ -69,6 +77,6 @@ export default function useQuestionCardrefs() {
     // Actions
     selectAnswer,
     handleCategoryChange,
-    setShowCategoryDropdown,
+    handleCategoryClick,
   };
 }

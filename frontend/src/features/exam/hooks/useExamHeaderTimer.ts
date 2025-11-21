@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useExamStore } from "../stores/examStore";
 
-export default function useExamHeaderTimer() {
+export function useExamHeaderTimer() {
   // Selectors
   const currentQuestionIndex = useExamStore(
     (s) => s.state.currentQuestionIndex

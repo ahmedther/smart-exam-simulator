@@ -32,6 +32,10 @@ interface Session {
   correct_answers: number;
   progress_percentage: number;
 }
+interface ExamSession {
+  session: Session;
+  questions: Question[];
+}
 
 interface ExamStore {
   decrementTime: () => void;
@@ -58,18 +62,25 @@ interface ExamStore {
     unansweredQuestions: number;
     progress: number;
   };
+  updateQuestionCategory: (
+    questionId: number,
+    categoryId: number,
+    categoryName: string
+  ) => void;
+
   // Helper to update statistics
   updateStatistics: () => void;
-
   // High-level actions (these use the reducer internally)
   selectAnswer: (optionId: string) => void;
   nextQuestion: () => void;
   previousQuestion: () => void;
   toggleMark: () => void;
   togglePause: () => void;
+  pauseForActivity: () => void;
+  resumeFromActivity: () => void;
   goToQuestion: (index: number) => void;
   clearAnswer: () => void;
   submitExam: () => void;
 }
 
-export type { ExamStore, Question, Session };
+export type { ExamStore, Question, Session, ExamSession };

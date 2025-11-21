@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react";
-import { useCheckActiveSession, useStartExam } from "../../exam/hooks/useExam";
+import { useCheckActiveSession, useStartExam } from "../../exam/hooks";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useExamStore } from "../../exam/stores/examStore";
 
-export default function useCheckActiveExam() {
+export function useCheckActiveExam() {
   const location = useLocation();
   const isOnExamPage = location.pathname.startsWith("/exam");
 

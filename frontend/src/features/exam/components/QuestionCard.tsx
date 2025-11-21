@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import NavigationButtons from "./NavigationButtons";
-import { capitalizeFirst } from "../../../utils/string";
 import Spinner from "../../../components/ui/Spinner";
-import useQuestionCardrefs from "../hooks/useQuestionCardrefs";
+import { useQuestionCardrefs } from "../hooks";
+import { capitalize } from "lodash";
 
 export default function QuestionCard() {
   const page = useQuestionCardrefs();
@@ -53,7 +53,7 @@ export default function QuestionCard() {
               {page.currentQuestion.category_name}
             </span>
             <button
-              onClick={() => page.setShowCategoryDropdown((prev) => !prev)}
+              onClick={page.handleCategoryClick}
               className="ml-2 p-1 hover:bg-indigo-100 rounded transition-colors duration-200"
               title="Edit category"
             >
@@ -130,7 +130,7 @@ export default function QuestionCard() {
 
       {/* Question Text */}
       <h2 className="text-2xl font-bold text-gray-800 mb-8 leading-relaxed ">
-        {capitalizeFirst(page.currentQuestion?.question_text.trim())}
+        {capitalize(page.currentQuestion?.question_text.trim())}
       </h2>
 
       {/* Answer Options */}
@@ -165,9 +165,7 @@ export default function QuestionCard() {
                   {letter.toUpperCase()}.
                 </span>
                 <span className="text-lg text-gray-700 font-medium ">
-                  {capitalizeFirst(
-                    page.currentQuestion![`choice_${letter}`].trim()
-                  )}
+                  {capitalize(page.currentQuestion![`choice_${letter}`].trim())}
                 </span>
               </div>
 

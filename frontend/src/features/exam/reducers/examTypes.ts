@@ -13,6 +13,7 @@ export interface Answer {
  * The complete state of an exam session
  */
 export interface ExamState {
+  pauseSource: "user" | "system" | null;
   currentQuestionIndex: number;
   answers: Map<string, Answer>;
   markedQuestions: Set<string>;
@@ -30,7 +31,11 @@ export type ExamAction =
   | { type: "NEXT_QUESTION"; questionId: string; timeSpent: number }
   | { type: "PREVIOUS_QUESTION"; questionId: string; timeSpent: number }
   | { type: "TOGGLE_MARK"; questionId: string }
-  | { type: "TOGGLE_PAUSE" }
+  | {
+      type: "SET_PAUSE";
+      isPaused: boolean | "toggle";
+      source: "user" | "system";
+    }
   | { type: "NAVIGATE_TO"; questionNumber: number; currentTimeSpent: number }
   | {
       type: "SET_QUESTION";

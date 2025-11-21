@@ -8,7 +8,7 @@ import {
   type ExamAction,
 } from "../reducers";
 import type { ExamStore } from "./examStoreType";
-import toast from "../../../utils/toast";
+import { toast } from "../../../utils";
 
 export const useExamStore = create<ExamStore>()(
   devtools(
@@ -73,6 +73,7 @@ export const useExamStore = create<ExamStore>()(
               questionStartTime: Date.now(),
               totalTimeSpent: session.total_time_spent,
               remainingTime: session.remaining_time,
+              pauseSource: null,
               // remainingTime: 5,
             },
           });
@@ -148,7 +149,15 @@ export const useExamStore = create<ExamStore>()(
         },
 
         togglePause: () => {
-          get().dispatch(examActions.togglePause());
+          get().dispatch(examActions.setPause("toggle", "user"));
+        },
+
+        pauseForActivity: () => {
+          get().dispatch(examActions.setPause(true, "system"));
+        },
+
+        resumeFromActivity: () => {
+          get().dispatch(examActions.setPause(false, "system"));
         },
         decrementTime: () => {
           get().dispatch(examActions.decrementTime());
