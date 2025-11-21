@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import {
-  createInitialExamState,
-  examActions,
-  examReducer,
-  type ExamAction,
-} from "../reducers";
-import type { ExamStore } from "./examStoreType";
+import { createInitialExamState, examActions, examReducer } from "../reducers";
+import type { ExamStore } from "../types/examStoreType";
 import { toast } from "../../../utils";
 
 export const useExamStore = create<ExamStore>()(

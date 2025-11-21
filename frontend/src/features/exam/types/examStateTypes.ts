@@ -1,6 +1,4 @@
-/**
- * Represents a single answer in the exam
- */
+
 export interface Answer {
   questionId: string;
   selectedOptionId: string;
@@ -9,9 +7,6 @@ export interface Answer {
   timestamp: Date;
 }
 
-/**
- * The complete state of an exam session
- */
 export interface ExamState {
   pauseSource: "user" | "system" | null;
   currentQuestionIndex: number;
@@ -23,9 +18,7 @@ export interface ExamState {
   remainingTime: number;
 }
 
-/**
- * All possible actions that can modify exam state
- */
+
 export type ExamAction =
   | { type: "SELECT_ANSWER"; questionId: string; optionId: string }
   | { type: "NEXT_QUESTION"; questionId: string; timeSpent: number }

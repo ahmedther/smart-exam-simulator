@@ -1,8 +1,17 @@
-// src/api/examApi.js
+import type {
+  Category,
+  ChangeCategoryResponse,
+  CheckActiveSessionResponse,
+  ExamSession,
+  PaginatedResponse,
+} from "../features/exam/types";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Helper function for API calls
-async function apiFetch(endpoint, options = {}) {
+async function apiFetch<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     headers: {
       "Content-Type": "application/json",
@@ -18,25 +27,21 @@ async function apiFetch(endpoint, options = {}) {
     throw new Error(error.error || `HTTP error! status: ${response.status}`);
   }
 
-  // const data = await response.json();
-  // await new Promise((resolve) => setTimeout(resolve, 2000));
-  // data.has_active_session = true;
-  // console.log("first");
-  // console.log(data);
-  // return data;
-
   return response.json();
 }
 
+// const data = await response.json();
+// await new Promise((resolve) => setTimeout(resolve, 2000));
+// data.has_active_session = true;
+// console.log("first");
+// console.log(data);
+// return data;
+
 // API Functions
+
 export const examApi = {
-  /**
-   * Get all categories
-   * @returns {Promise<{count: number, next: string|null, previous: string|null, results: Array}>}
-   */
-  // Start a new exam session
-  startExam: async (browserFingerprint) => {
-    return apiFetch("/exam-sessions/start/", {
+  startExam: async (browserFingerprint: string) => {
+    return apiFetch<ExamSession>("/exam-sessions/start/", {
       method: "POST",
       body: JSON.stringify({
         browser_fingerprint: browserFingerprint || `browser-${Date.now()}`,
@@ -45,20 +50,23 @@ export const examApi = {
   },
 
   // Check for active session
-  checkActiveSession: async (browserFingerprint) => {
-    return apiFetch("/exam-sessions/check-active/", {
-      method: "POST",
-      body: JSON.stringify({ browser_fingerprint: browserFingerprint }),
-    });
+  checkActiveSession: async (browserFingerprint: string) => {
+    return apiFetch<CheckActiveSessionResponse>(
+      "/exam-sessions/check-active/",
+      {
+        method: "POST",
+        body: JSON.stringify({ browser_fingerprint: browserFingerprint }),
+      }
+    );
   },
 
   // Resume session
-  resumeSession: async (sessionId) => {
+  resumeSession: async (sessionId: string) => {
     return apiFetch(`/exam-sessions/${sessionId}/resume/`);
   },
 
-  changeCategory: async (questionId, newCategoryId) => {
-    return apiFetch("/questions/update-category/", {
+  changeCategory: async (questionId: number, newCategoryId: number) => {
+    return apiFetch<ChangeCategoryResponse>("/questions/update-category/", {
       method: "PATCH",
       body: JSON.stringify({
         question_id: questionId,
@@ -67,7 +75,11 @@ export const examApi = {
     });
   },
   // Submit answer
-  submitAnswer: async (questionId, userAnswer, timeSpent) => {
+  submitAnswer: async (
+    questionId: number,
+    userAnswer: string,
+    timeSpent: number
+  ) => {
     return apiFetch(`/exam-questions/${questionId}/answer/`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -78,14 +90,18 @@ export const examApi = {
   },
 
   // Toggle mark for review
-  toggleMark: async (questionId) => {
+  toggleMark: async (questionId: number) => {
     return apiFetch(`/exam-questions/${questionId}/toggle-mark/`, {
       method: "PATCH",
     });
   },
 
   // Auto-save progress
-  autosave: async (sessionId, totalTimeSpent, currentQuestionNumber) => {
+  autosave: async (
+    sessionId: string,
+    totalTimeSpent: number,
+    currentQuestionNumber: number
+  ) => {
     return apiFetch(`/exam-sessions/${sessionId}/autosave/`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -96,7 +112,7 @@ export const examApi = {
   },
 
   // Submit exam
-  submitExam: async (sessionId, totalTimeSpent) => {
+  submitExam: async (sessionId: string, totalTimeSpent: number) => {
     return apiFetch(`/exam-sessions/${sessionId}/submit/`, {
       method: "POST",
       body: JSON.stringify({ total_time_spent: totalTimeSpent }),
@@ -105,6 +121,6 @@ export const examApi = {
 
   // Get categories
   getCategories: async () => {
-    return apiFetch("/categories/");
+    return apiFetch<PaginatedResponse<Category>>("/categories/");
   },
 };

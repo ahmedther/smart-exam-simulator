@@ -1,4 +1,4 @@
-import type { ExamState, ExamAction, Answer } from "./examTypes";
+import type { ExamState, ExamAction, Answer } from "../types/examStateTypes";
 
 /**
  * Factory function to create initial exam state

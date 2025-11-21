@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ExamAction, ExamState } from "../reducers";
+import type { ExamAction, ExamState } from "./examStateTypes";
 
 interface Question {
   id: number;

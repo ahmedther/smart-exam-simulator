@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import QuestionCard from "../features/exam/components/QuestionCard";
 import MarkedQuestionsPanel from "../features/exam/components/MarkedQuestionsPanel";
 import TimeUpCard from "../features/exam/components/TimeUpCard";
+import type { ExamSession } from "../features/exam/types";
 
 export const Route = createFileRoute("/exam/$sessionId")({
   loader: ({ context: { queryClient }, params: { sessionId } }) => {
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/exam/$sessionId")({
 });
 
 function ExamComponent() {
-  const data = Route.useLoaderData();
+  const data = Route.useLoaderData() as ExamSession;
   const initialize = useExamStore((s) => s.initialize);
   const remainingTime = useExamStore((s) => s.state.remainingTime);
   // const { isSaving, lastSaved } = useAutoSave();

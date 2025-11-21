@@ -6,7 +6,7 @@ export function useCategories() {
     queryKey: ["categories"],
     queryFn: async () => {
       const response = await examApi.getCategories();
-      return response.results; // Extract results in the hook
+      return response.results;
     },
     staleTime: Infinity,
     gcTime: Infinity,

@@ -3,7 +3,7 @@ import { useExamStore } from "../stores/examStore";
 import { toast } from "../../../utils";
 import React from "react";
 import { examApi } from "../../../api/examApi";
-import type { ExamSession } from "../stores/examStoreType";
+import type { ExamSession } from "../types/examStoreType";
 
 export function useChangeCategory() {
   const updateQuestionCategory = useExamStore((s) => s.updateQuestionCategory);

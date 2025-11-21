@@ -1,4 +1,4 @@
-import type { ExamAction, ExamState } from "./examTypes";
+import type { ExamAction, ExamState } from "../types/examStateTypes";
 
 /**
  * Action creators - pure functions that create action objects

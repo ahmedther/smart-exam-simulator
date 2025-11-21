@@ -1,15 +1,8 @@
-// src/hooks/useExam.js
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { examApi } from "../../../api/examApi";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import toast from "../../../utils";
-import { useExamStore } from "../stores/examStore";
-import React from "react";
+import { examApi } from "../../../api/examApi";
+import { getBrowserFingerprint } from "../../../utils";
 
-// Get browser fingerprint (you can use a library like fingerprintjs2 for better implementation)
-
-
-// Hook to start a new exam
 export function useStartExam() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -34,4 +27,3 @@ export function useStartExam() {
     },
   });
 }
-

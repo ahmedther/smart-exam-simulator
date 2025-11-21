@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, useState } from "react";
 import { useExamStore } from "../stores/examStore";
 import { useCategories } from "./useCategories";
 import { useChangeCategory, useClickOutside } from "../hooks";
-import type { Category } from "../../../types";
+import type { Category } from "../types";
 import { toast } from "../../../utils";
+import { parseInt } from "lodash";
 
 export function useQuestionCardrefs() {
   const currentQuestion = useExamStore((s) => s.getCurrentQuestion());
@@ -19,7 +19,7 @@ export function useQuestionCardrefs() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const choices = ["a", "b", "c", "d"] as const;
   const { data: categories = [] } = useCategories() as { data: Category[] };
-  const changeCategory = useChangeCategory() as any;
+  const changeCategory = useChangeCategory();
   const pauseForActivity = useExamStore((s) => s.pauseForActivity);
   const resumeFromActivity = useExamStore((s) => s.resumeFromActivity);
 
@@ -32,15 +32,13 @@ export function useQuestionCardrefs() {
     showCategoryDropdown
   );
 
-  // console.log(currentQuestion);
-
   const handleCategoryChange = (newCategoryId: string) => {
     if (newCategoryId === "0") return;
 
     if (currentQuestion!.category_id !== parseInt(newCategoryId)) {
       changeCategory.mutate({
         questionId: currentQuestion!.question_id,
-        newCategoryId: newCategoryId,
+        newCategoryId: parseInt(newCategoryId),
       });
     } else {
       toast.info(
