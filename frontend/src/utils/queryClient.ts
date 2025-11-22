@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, MutationCache, QueryCache } from "@tanstack/react-query";
 import { toast } from "./toast";
+import type { ApiError } from "../features/exam/types";
 
-function handleError(error: any) {
+function handleError(error: ApiError) {
   console.log("Global error handler triggered:", error); // Debug log
 
   const message =
@@ -20,7 +20,7 @@ function handleError(error: any) {
     toast.error("You don't have permission", "Access Denied");
   } else if (status === 404) {
     toast.error("Resource not found", "Not Found");
-  } else if (status >= 500) {
+  } else if (status && status >= 500) {
     toast.error("Server error. Please try again later", "Server Error");
   } else {
     toast.error(message);

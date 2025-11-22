@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { createInitialExamState, examActions, examReducer } from "../reducers";
 import type { ExamStore } from "../types/examStoreType";
 import { toast } from "../../../utils";
+import type { Answer, ExamAction } from "../types";
 
 export const useExamStore = create<ExamStore>()(
   devtools(
@@ -15,21 +15,12 @@ export const useExamStore = create<ExamStore>()(
         session: null,
         questions: [],
 
-        statistics: {
-          totalQuestions: 0,
-          answeredQuestions: 0,
-          markedQuestions: 0,
-          unansweredQuestions: 0,
-          progress: 0,
-        },
-
         // Dispatch action to reducer
         dispatch: (action: ExamAction) => {
           set((store) => ({
             state: examReducer(store.state, action),
           }));
           // ✅ Recalculate statistics after state changes
-          get().updateStatistics();
         },
 
         // ✅ Initialize store with API data
@@ -37,10 +28,8 @@ export const useExamStore = create<ExamStore>()(
           const { session, questions } = data;
 
           // Restore any existing answers from server
-          const answers = new Map<string, any>();
+          const answers = new Map<string, Answer>();
           const markedQuestions = new Set<string>();
-          get().updateStatistics();
-
           questions.forEach((q) => {
             if (q.user_answer) {
               answers.set(String(q.id), {
@@ -157,13 +146,16 @@ export const useExamStore = create<ExamStore>()(
         decrementTime: () => {
           get().dispatch(examActions.decrementTime());
 
-          // Optional: Trigger auto-submit when time reaches 0
-          const { state } = get();
-          if (state.remainingTime === 600) toast.info("10 minutes left!");
-          if (state.remainingTime === 300) toast.info("5 minutes left!");
-          if (state.remainingTime === 60) toast.warning("1 minute left!");
-
-          if (state.remainingTime === 3)
+          // if (newTime <= 0) {
+          //   // NOW we use the generic dispatch because submitting DOES affect statistics/state
+          //   get().dispatch(examActions.submitExam());
+          //   toast.warning("Time expired! Auto-submitting...");
+          // }
+          const remaining = get().state.remainingTime;
+          if (remaining === 600) toast.info("10 minutes left!");
+          if (remaining === 300) toast.info("5 minutes left!");
+          if (remaining === 60) toast.warning("1 minute left!");
+          if (remaining === 3)
             toast.warning("Time expired! Auto-submitting score...");
         },
 
@@ -216,21 +208,22 @@ export const useExamStore = create<ExamStore>()(
             ),
           })),
 
-        updateStatistics: () => {
-          const { state, questions } = get();
-          set({
-            statistics: {
-              totalQuestions: questions.length,
-              answeredQuestions: state.answers.size,
-              markedQuestions: state.markedQuestions.size,
-              unansweredQuestions: questions.length - state.answers.size,
-              progress:
-                questions.length > 0
-                  ? (state.answers.size / questions.length) * 100
-                  : 0,
-            },
-          });
-        },
+        // getStatistics: () => {
+        //   const { questions, state } = get();
+        //   const answeredCount = state.answers.size;
+        //   const markedCount = state.markedQuestions.size;
+
+        //   return {
+        //     totalQuestions: questions.length,
+        //     answeredQuestions: answeredCount,
+        //     markedQuestions: markedCount,
+        //     unansweredQuestions: questions.length - answeredCount,
+        //     progress:
+        //       questions.length > 0
+        //         ? Math.round((answeredCount / questions.length) * 100)
+        //         : 0,
+        //   };
+        // },
       }),
       {
         name: "exam-storage",

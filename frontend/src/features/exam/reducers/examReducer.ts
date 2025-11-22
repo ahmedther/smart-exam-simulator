@@ -191,23 +191,6 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
       };
     }
 
-    case "DECREMENT_TIME": {
-      const newRemainingTime = Math.max(0, state.remainingTime - 1);
-      // Auto-pause when time runs out
-      if (newRemainingTime === 0 && !state.isPaused) {
-        return {
-          ...state,
-          remainingTime: 0,
-          isPaused: true,
-        };
-      }
-
-      return {
-        ...state,
-        remainingTime: newRemainingTime,
-      };
-    }
-
     case "CLEAR_ANSWER": {
       const newAnswers = new Map(state.answers);
       newAnswers.delete(action.questionId);
@@ -225,7 +208,14 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
         isPaused: true,
       };
     }
-
+    case "DECREMENT_TIME": {
+      const newTime = Math.max(0, state.remainingTime - 1);
+      return {
+        ...state,
+        remainingTime: newTime,
+        isPaused: newTime === 0 ? true : state.isPaused,
+      };
+    }
     case "RESTORE_STATE":
       return action.state;
 

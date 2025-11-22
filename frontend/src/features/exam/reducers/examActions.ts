@@ -52,9 +52,6 @@ export const examActions = {
     source,
   }),
 
-  decrementTime: (): ExamAction => ({
-    type: "DECREMENT_TIME",
-  }),
   /**
    * Navigate to a specific question by number
    */
@@ -126,5 +123,9 @@ export const examActions = {
   restoreState: (state: ExamState): ExamAction => ({
     type: "RESTORE_STATE",
     state,
+  }),
+
+  decrementTime: (): ExamAction => ({
+    type: "DECREMENT_TIME",
   }),
 };

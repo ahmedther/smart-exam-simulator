@@ -1,16 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import NavigationButtons from "./NavigationButtons";
 import Spinner from "../../../components/ui/Spinner";
-import { useQuestionCardrefs } from "../hooks";
+import { useQuestionCardRefs } from "../hooks";
 import { capitalize } from "lodash";
 
 export default function QuestionCard() {
-  const page = useQuestionCardrefs();
+  const page = useQuestionCardRefs();
 
   if (!page.currentQuestion) {
     return <Spinner text="Loading Questions..." size="lg" />;
   }
-
   return (
     <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl p-8 shadow-lg">
       {/* Question Header */}

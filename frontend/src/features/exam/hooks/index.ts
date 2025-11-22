@@ -3,7 +3,6 @@ export * from "./useCategories";
 export * from "./useChangeCategory";
 export * from "./useCheckActiveSession";
 export * from "./useClickOutside";
-export * from "./useExamHeaderTimer";
 export * from "./useExamSession";
-export * from "./useQuestionCardrefs";
+export * from "./useQuestionCardRefs";
 export * from "./useStartExam";

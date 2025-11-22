@@ -1,12 +1,12 @@
 import { useRef, useState } from "react";
 import { useExamStore } from "../stores/examStore";
 import { useCategories } from "./useCategories";
-import { useChangeCategory, useClickOutside } from "../hooks";
+import { useChangeCategory, useClickOutside } from ".";
 import type { Category } from "../types";
 import { toast } from "../../../utils";
 import { parseInt } from "lodash";
 
-export function useQuestionCardrefs() {
+export function useQuestionCardRefs() {
   const currentQuestion = useExamStore((s) => s.getCurrentQuestion());
   const currentAnswer = useExamStore((s) => s.getCurrentAnswer());
   const isMarked = useExamStore((s) => s.isCurrentMarked());
@@ -20,6 +20,7 @@ export function useQuestionCardrefs() {
   const choices = ["a", "b", "c", "d"] as const;
   const { data: categories = [] } = useCategories() as { data: Category[] };
   const changeCategory = useChangeCategory();
+  const isPaused = useExamStore((s) => s.state.isPaused);
   const pauseForActivity = useExamStore((s) => s.pauseForActivity);
   const resumeFromActivity = useExamStore((s) => s.resumeFromActivity);
 
@@ -57,7 +58,8 @@ export function useQuestionCardrefs() {
   };
 
   const handleCategoryClick = () => {
-    pauseForActivity();
+    if (isPaused) resumeFromActivity();
+    else pauseForActivity();
     setShowCategoryDropdown(!showCategoryDropdown);
   };
 

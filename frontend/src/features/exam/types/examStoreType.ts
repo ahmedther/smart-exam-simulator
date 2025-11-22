@@ -1,4 +1,4 @@
-import type { ExamAction, ExamState } from "./examStateTypes";
+import type { Answer, ExamAction, ExamState } from "./examStateTypes";
 
 interface Question {
   id: number;
@@ -52,15 +52,9 @@ interface ExamStore {
 
   // Computed values
   getCurrentQuestion: () => Question | undefined;
-  getCurrentAnswer: () => any;
+  getCurrentAnswer: () => Answer | undefined;
   isCurrentMarked: () => boolean;
-  statistics: {
-    totalQuestions: number;
-    answeredQuestions: number;
-    markedQuestions: number;
-    unansweredQuestions: number;
-    progress: number;
-  };
+
   updateQuestionCategory: (
     questionId: number,
     categoryId: number,
@@ -68,7 +62,6 @@ interface ExamStore {
   ) => void;
 
   // Helper to update statistics
-  updateStatistics: () => void;
   // High-level actions (these use the reducer internally)
   selectAnswer: (optionId: string) => void;
   nextQuestion: () => void;

@@ -28,3 +28,14 @@ export type CheckActiveSessionResponse = {
   session_id?: string;
   session?: Session;
 };
+
+export interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+      error?: string;
+    };
+    status?: number;
+  };
+  message?: string;
+}
