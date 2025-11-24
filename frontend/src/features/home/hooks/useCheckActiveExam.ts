@@ -11,7 +11,7 @@ export function useCheckActiveExam() {
   const navigate = useNavigate();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const sessionId = useExamStore((s) => s.sessionId);
-  const { data, isLoading } = useCheckActiveSession();
+  const { data, isLoading } = useCheckActiveSession(!isOnExamPage);
   const hasActiveSession = data?.has_active_session ?? false;
 
   // Use useCallback to memoize handlers and prevent unnecessary re-renders

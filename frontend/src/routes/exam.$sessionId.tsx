@@ -29,7 +29,6 @@ function ExamComponent() {
 
   useAutoSave();
 
-  console.log("Render Check");
   useEffect(() => {
     initialize(data);
   }, [data, initialize]);

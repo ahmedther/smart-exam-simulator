@@ -15,7 +15,7 @@ import ConfirmModal from "../components/ui/ConfirmModal";
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
-    context.queryClient.prefetchQuery(activeSessionQueryOptions);
+    context.queryClient.prefetchQuery(activeSessionQueryOptions(true));
     return {};
   },
   component: HomeComponent,
