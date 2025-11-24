@@ -1,8 +1,4 @@
-import type { ExamState, ExamAction, Answer } from "../types/examStateTypes";
-
-/**
- * Factory function to create initial exam state
- */
+import type { Answer, ExamAction, ExamState } from "../types";
 export const createInitialExamState = (): ExamState => ({
   currentQuestionIndex: 0,
   answers: new Map(),
@@ -14,9 +10,6 @@ export const createInitialExamState = (): ExamState => ({
   pauseSource: null,
 });
 
-/**
- * Pure reducer function - handles all exam state transitions
- */
 export function examReducer(state: ExamState, action: ExamAction): ExamState {
   switch (action.type) {
     case "SELECT_ANSWER": {
@@ -42,27 +35,27 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
 
     case "NEXT_QUESTION": {
       const currentAnswer = state.answers.get(action.questionId);
+      const newAnswers = new Map(state.answers);
+
       if (currentAnswer) {
-        const updatedAnswer = {
+        newAnswers.set(action.questionId, {
           ...currentAnswer,
           timeSpent: currentAnswer.timeSpent + action.timeSpent,
-        };
-        const newAnswers = new Map(state.answers);
-        newAnswers.set(action.questionId, updatedAnswer);
-
-        return {
-          ...state,
-          currentQuestionIndex: state.currentQuestionIndex + 1,
-          answers: newAnswers,
-          questionStartTime: Date.now(),
-          totalTimeSpent: state.totalTimeSpent + action.timeSpent,
-          isPaused: false,
-          pauseSource: null,
-        };
+        });
+      } else {
+        newAnswers.set(action.questionId, {
+          questionId: action.questionId,
+          selectedOptionId: null,
+          timeSpent: action.timeSpent,
+          markedForReview: false,
+          timestamp: new Date(),
+        });
       }
+
       return {
         ...state,
         currentQuestionIndex: state.currentQuestionIndex + 1,
+        answers: newAnswers,
         questionStartTime: Date.now(),
         totalTimeSpent: state.totalTimeSpent + action.timeSpent,
         isPaused: false,
@@ -74,27 +67,27 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
       if (state.currentQuestionIndex === 0) return state;
 
       const currentAnswer = state.answers.get(action.questionId);
+      const newAnswers = new Map(state.answers);
+
       if (currentAnswer) {
-        const updatedAnswer = {
+        newAnswers.set(action.questionId, {
           ...currentAnswer,
           timeSpent: currentAnswer.timeSpent + action.timeSpent,
-        };
-        const newAnswers = new Map(state.answers);
-        newAnswers.set(action.questionId, updatedAnswer);
-
-        return {
-          ...state,
-          currentQuestionIndex: state.currentQuestionIndex - 1,
-          answers: newAnswers,
-          questionStartTime: Date.now(),
-          totalTimeSpent: state.totalTimeSpent + action.timeSpent,
-          isPaused: false,
-          pauseSource: null,
-        };
+        });
+      } else {
+        newAnswers.set(action.questionId, {
+          questionId: action.questionId,
+          selectedOptionId: null,
+          timeSpent: action.timeSpent,
+          markedForReview: false,
+          timestamp: new Date(),
+        });
       }
+
       return {
         ...state,
         currentQuestionIndex: state.currentQuestionIndex - 1,
+        answers: newAnswers,
         questionStartTime: Date.now(),
         totalTimeSpent: state.totalTimeSpent + action.timeSpent,
         isPaused: false,
@@ -112,82 +105,94 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
 
       const currentAnswer = state.answers.get(action.questionId);
       if (currentAnswer) {
-        const updatedAnswer = {
+        const newAnswers = new Map(state.answers);
+        newAnswers.set(action.questionId, {
           ...currentAnswer,
           markedForReview: !currentAnswer.markedForReview,
-        };
-        const newAnswers = new Map(state.answers);
-        newAnswers.set(action.questionId, updatedAnswer);
+        });
         return { ...state, markedQuestions: newMarked, answers: newAnswers };
       }
 
       return { ...state, markedQuestions: newMarked };
     }
-    case "SET_PAUSE": {
-      const newPaused =
-        action.isPaused === "toggle" ? !state.isPaused : action.isPaused;
 
-      // Don't override user pause with system
-      if (state.pauseSource === "user" && action.source === "system") {
-        return state;
+    case "SET_PAUSE": {
+      const shouldPause =
+        action.paused === "toggle" ? !state.isPaused : action.paused;
+
+      if (shouldPause && !state.isPaused && action.currentQuestionId) {
+        const timeSpent = Math.floor(
+          (Date.now() - state.questionStartTime) / 1000
+        );
+        const currentAnswer = state.answers.get(action.currentQuestionId);
+        const newAnswers = new Map(state.answers);
+
+        if (currentAnswer) {
+          newAnswers.set(action.currentQuestionId, {
+            ...currentAnswer,
+            timeSpent: currentAnswer.timeSpent + timeSpent,
+          });
+        } else if (timeSpent > 0) {
+          newAnswers.set(action.currentQuestionId, {
+            questionId: action.currentQuestionId,
+            selectedOptionId: null,
+            timeSpent: timeSpent,
+            markedForReview: false,
+            timestamp: new Date(),
+          });
+        }
+
+        return {
+          ...state,
+          isPaused: true,
+          pauseSource: action.source,
+          answers: newAnswers,
+          totalTimeSpent: state.totalTimeSpent + timeSpent,
+          questionStartTime: Date.now(),
+        };
+      } else if (!shouldPause && state.isPaused) {
+        if (action.source === "system" && state.pauseSource !== "system") {
+          return state;
+        }
+
+        return {
+          ...state,
+          isPaused: false,
+          pauseSource: null,
+          questionStartTime: Date.now(),
+        };
       }
 
-      return {
-        ...state,
-        isPaused: newPaused,
-        pauseSource: newPaused ? action.source : null,
-      };
-    }
-    case "NAVIGATE_TO": {
-      return {
-        ...state,
-        currentQuestionIndex: action.questionNumber,
-        questionStartTime: Date.now(),
-        totalTimeSpent: state.totalTimeSpent + action.currentTimeSpent,
-      };
+      return state;
     }
 
     case "SET_QUESTION": {
       const currentAnswer = state.answers.get(action.questionId);
+      const newAnswers = new Map(state.answers);
+
       if (currentAnswer) {
-        const updatedAnswer = {
+        newAnswers.set(action.questionId, {
           ...currentAnswer,
           timeSpent: currentAnswer.timeSpent + action.timeSpent,
-        };
-        const newAnswers = new Map(state.answers);
-        newAnswers.set(action.questionId, updatedAnswer);
-
-        return {
-          ...state,
-          currentQuestionIndex: action.index,
-          answers: newAnswers,
-          questionStartTime: Date.now(),
-          totalTimeSpent: state.totalTimeSpent + action.timeSpent,
-          isPaused: false,
-          pauseSource: null,
-        };
+        });
+      } else if (action.timeSpent > 0) {
+        newAnswers.set(action.questionId, {
+          questionId: action.questionId,
+          selectedOptionId: null,
+          timeSpent: action.timeSpent,
+          markedForReview: false,
+          timestamp: new Date(),
+        });
       }
+
       return {
         ...state,
         currentQuestionIndex: action.index,
+        answers: newAnswers,
         questionStartTime: Date.now(),
         totalTimeSpent: state.totalTimeSpent + action.timeSpent,
         isPaused: false,
         pauseSource: null,
-      };
-    }
-
-    case "UPDATE_TIME": {
-      return {
-        ...state,
-        totalTimeSpent: state.totalTimeSpent + action.timeSpent,
-      };
-    }
-
-    case "UPDATE_TOTAL_TIME": {
-      return {
-        ...state,
-        totalTimeSpent: state.totalTimeSpent + action.seconds,
       };
     }
 
@@ -197,10 +202,6 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
       return { ...state, answers: newAnswers };
     }
 
-    case "RESET_EXAM": {
-      return createInitialExamState();
-    }
-
     case "SUBMIT_EXAM": {
       return {
         ...state,
@@ -208,6 +209,7 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
         isPaused: true,
       };
     }
+
     case "DECREMENT_TIME": {
       const newTime = Math.max(0, state.remainingTime - 1);
       return {
@@ -216,8 +218,6 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
         isPaused: newTime === 0 ? true : state.isPaused,
       };
     }
-    case "RESTORE_STATE":
-      return action.state;
 
     default:
       return state;

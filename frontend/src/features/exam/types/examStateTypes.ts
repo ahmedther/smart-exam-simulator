@@ -1,7 +1,6 @@
-
 export interface Answer {
   questionId: string;
-  selectedOptionId: string;
+  selectedOptionId: string | null;
   timeSpent: number; // in seconds
   markedForReview: boolean;
   timestamp: Date;
@@ -18,7 +17,6 @@ export interface ExamState {
   remainingTime: number;
 }
 
-
 export type ExamAction =
   | { type: "SELECT_ANSWER"; questionId: string; optionId: string }
   | { type: "NEXT_QUESTION"; questionId: string; timeSpent: number }
@@ -26,20 +24,16 @@ export type ExamAction =
   | { type: "TOGGLE_MARK"; questionId: string }
   | {
       type: "SET_PAUSE";
-      isPaused: boolean | "toggle";
+      paused: boolean | "toggle";
       source: "user" | "system";
-    }
-  | { type: "NAVIGATE_TO"; questionNumber: number; currentTimeSpent: number }
+      currentQuestionId?: string;
+    } // ✅ Changed
   | {
       type: "SET_QUESTION";
       index: number;
       questionId: string;
       timeSpent: number;
     }
-  | { type: "UPDATE_TIME"; timeSpent: number }
-  | { type: "UPDATE_TOTAL_TIME"; seconds: number }
-  | { type: "DECREMENT_TIME" }
   | { type: "CLEAR_ANSWER"; questionId: string }
-  | { type: "RESET_EXAM" }
   | { type: "SUBMIT_EXAM"; finalTimeSpent: number }
-  | { type: "RESTORE_STATE"; state: ExamState };
+  | { type: "DECREMENT_TIME" };

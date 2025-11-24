@@ -65,7 +65,6 @@ export function useQuestionCardRefs() {
 
   return {
     currentQuestion,
-    currentAnswer,
     isMarked,
     selectedAnswer,
     currentQuestionIndex,

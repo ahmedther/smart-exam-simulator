@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import ExamHeader from "../features/exam/components/ExamHeader";
-import { userExamSessionOptions } from "../features/exam/hooks";
+import { useAutoSave, userExamSessionOptions } from "../features/exam/hooks";
 import Spinner from "../components/ui/Spinner";
 import { useExamStore } from "../features/exam/stores/examStore";
 import { useEffect } from "react";
 import QuestionCard from "../features/exam/components/QuestionCard";
 import MarkedQuestionsPanel from "../features/exam/components/MarkedQuestionsPanel";
 import type { ExamSession } from "../features/exam/types";
+import ExamSummaryPanel from "../features/exam/components/ExamSummaryPanel";
 
 export const Route = createFileRoute("/exam/$sessionId")({
   loader: ({ context: { queryClient }, params: { sessionId } }) => {
@@ -26,8 +27,9 @@ function ExamComponent() {
   const data = Route.useLoaderData() as ExamSession;
   const initialize = useExamStore((s) => s.initialize);
 
-  // const { isSaving, lastSaved } = useAutoSave();
+  useAutoSave();
 
+  console.log("Render Check");
   useEffect(() => {
     initialize(data);
   }, [data, initialize]);
@@ -37,8 +39,8 @@ function ExamComponent() {
       <div className="max-w-5xl mx-auto space-y-6">
         {/* {isSaving && <span>Saving...</span>}
         {lastSaved && <span>Last saved: {lastSaved.toLocaleTimeString()}</span>} */}
-
         <ExamHeader />
+        <ExamSummaryPanel />
         <MarkedQuestionsPanel />
         <QuestionCard />
       </div>

@@ -1,89 +1,95 @@
-// hooks/useAutoSave.ts
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useExamStore } from "../stores/examStore";
-import { useMutation } from "@tanstack/react-query";
-import { debounce } from "lodash"; // or custom debounce
+import { examApi } from "../../../api/examApi";
+import type { AutoSaveInput, AutoSavePayload } from "../types";
 
 export function useAutoSave() {
-  const state = useExamStore((s) => s.state);
   const sessionId = useExamStore((s) => s.sessionId);
-  const lastSavedRef = useRef<string>("");
+  const lastSavedStrRef = useRef("");
 
-  const saveMutation = useMutation({
-    mutationFn: async (payload: {
-      answers: Array<{
-        questionId: string;
-        answer: string;
-        timeSpent: number;
-        markedForReview: boolean;
-      }>;
-      currentQuestionIndex: number;
-      totalTimeSpent: number;
-      remainingTime: number;
-    }) => {
-      return fetch(`/api/exam/${sessionId}/save`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    },
-    // ✅ No need to update React Query or Zustand - they're already updated optimistically
-  });
-
-  // ✅ Debounced save - saves every 30s or after 5s of inactivity
-  const debouncedSave = useRef(
-    debounce((data: typeof state) => {
-      const serialized = JSON.stringify(data);
-
-      // Only save if data changed
-      if (serialized === lastSavedRef.current) return;
-
-      lastSavedRef.current = serialized;
-
-      saveMutation.mutate({
-        answers: Array.from(data.answers.entries()).map(([id, ans]) => ({
-          questionId: id,
-          answer: ans.selectedOptionId,
-          timeSpent: ans.timeSpent,
-          markedForReview: ans.markedForReview,
+  const preparePayload = useCallback(
+    (data: AutoSaveInput): AutoSavePayload => ({
+      total_time_spent: data.totalTimeSpent,
+      current_question_number: data.currentQuestionIndex + 1,
+      answers: Array.from(data.answers.entries())
+        .filter(([, ans]) => ans.selectedOptionId !== null)
+        .map(([qId, ans]) => ({
+          question_id: qId,
+          user_answer: ans.selectedOptionId!,
+          time_spent: ans.timeSpent,
+          marked_for_review: data.markedQuestions.has(qId),
         })),
-        currentQuestionIndex: data.currentQuestionIndex,
-        totalTimeSpent: data.totalTimeSpent,
-        remainingTime: data.remainingTime,
-      });
-    }, 5000) // Save after 5s of inactivity
-  ).current;
+    }),
+    []
+  );
 
-  // ✅ Auto-save on state changes
-  useEffect(() => {
-    debouncedSave(state);
-  }, [state, debouncedSave]);
+  const performSave = useCallback(async () => {
+    const currentQuestionIndex =
+      useExamStore.getState().state.currentQuestionIndex;
+    const totalTimeSpent = useExamStore.getState().state.totalTimeSpent;
+    const answers = useExamStore.getState().state.answers;
+    const markedQuestions = useExamStore.getState().state.markedQuestions;
 
-  // ✅ Periodic save every 30s (backup)
+    const serialized = JSON.stringify({
+      answers: Array.from(answers.entries()),
+      marked: Array.from(markedQuestions),
+      index: currentQuestionIndex,
+    });
+
+    if (serialized === lastSavedStrRef.current) return;
+
+    const payload = preparePayload({
+      currentQuestionIndex,
+      totalTimeSpent,
+      answers,
+      markedQuestions,
+    });
+
+    await examApi.autoSave(sessionId, payload);
+    lastSavedStrRef.current = serialized;
+  }, [sessionId, preparePayload]);
+
+  // ✅ Periodic backup every 30s
   useEffect(() => {
     const interval = setInterval(() => {
-      debouncedSave(state);
-      debouncedSave.flush(); // Force immediate save
+      performSave();
     }, 30000);
 
-    return () => {
-      clearInterval(interval);
-      debouncedSave.flush(); // Save on unmount
-    };
-  }, [state, debouncedSave]);
+    return () => clearInterval(interval);
+  }, [performSave]);
 
-  // ✅ Save before page unload
+  // ✅ Save on visibility change
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      debouncedSave.flush();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        performSave().catch((err) => console.error("Save failed:", err));
+
+        const currentQuestionIndex =
+          useExamStore.getState().state.currentQuestionIndex;
+        const totalTimeSpent = useExamStore.getState().state.totalTimeSpent;
+        const answers = useExamStore.getState().state.answers;
+        const markedQuestions = useExamStore.getState().state.markedQuestions;
+
+        const payload = preparePayload({
+          currentQuestionIndex,
+          totalTimeSpent,
+          answers,
+          markedQuestions,
+        });
+
+        const blob = new Blob([JSON.stringify(payload)], {
+          type: "application/json",
+        });
+
+        navigator.sendBeacon(
+          `${window.location.origin}/api/exam-sessions/${sessionId}/autosave/`,
+          blob
+        );
+      }
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [debouncedSave]);
-
-  return {
-    isSaving: saveMutation.isPending,
-    lastSaved: saveMutation.isSuccess ? new Date() : null,
-  };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [sessionId, preparePayload, performSave]);
 }

@@ -97,17 +97,22 @@ export const examApi = {
   },
 
   // Auto-save progress
-  autosave: async (
+  autoSave: async (
     sessionId: string,
-    totalTimeSpent: number,
-    currentQuestionNumber: number
+    data: {
+      total_time_spent: number;
+      current_question_number: number;
+      answers: Array<{
+        question_id: string;
+        user_answer: string | null;
+        time_spent: number;
+        marked_for_review: boolean;
+      }>;
+    }
   ) => {
     return apiFetch(`/exam-sessions/${sessionId}/autosave/`, {
       method: "PATCH",
-      body: JSON.stringify({
-        total_time_spent: totalTimeSpent,
-        current_question_number: currentQuestionNumber,
-      }),
+      body: JSON.stringify(data),
     });
   },
 

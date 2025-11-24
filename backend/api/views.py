@@ -221,35 +221,79 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
 
         return Response(ExamSessionSerializer(session).data)
 
-    @action(detail=True, methods=["patch"])
+    @action(detail=True, methods=["patch", "post"])
     def autosave(self, request, session_id=None):
         """
         PATCH /api/exam-sessions/{session_id}/autosave/
-        Auto-save session progress (called every 60 seconds from frontend)
 
         Body: {
             "total_time_spent": 3600,
-            "current_question_number": 45
+            "current_question_number": 45,
+            "answers": [
+                {
+                    "question_id": "123",
+                    "user_answer": "a",
+                    "time_spent": 30,
+                    "marked_for_review": false
+                }
+            ]
         }
         """
+        try:
+            if request.content_type == "application/json":
+                data = request.data
+            else:
+                # sendBeacon might send as text/plain
+                import json
+
+                data = json.loads(request.body)
+        except:
+            data = request.data
         session = self.get_object()
 
+        for d in data.items():
+            print(d)
         if session.status not in ["in_progress", "paused"]:
             return Response(
                 {"error": "Session is not active"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Update session timing
-        session.total_time_spent = request.data.get(
-            "total_time_spent", session.total_time_spent
-        )
-        session.current_question_number = request.data.get(
-            "current_question_number", session.current_question_number
-        )
-        session.save()
+        with transaction.atomic():
+            # Update session
+            session.total_time_spent = request.data.get(
+                "total_time_spent", session.total_time_spent
+            )
+            session.current_question_number = request.data.get(
+                "current_question_number", session.current_question_number
+            )
+            session.save()
+
+            # Batch update answers
+            answers_data = request.data.get("answers", [])
+            for answer in answers_data:
+                ExamQuestion.objects.filter(
+                    session=session, id=answer["question_id"]
+                ).update(
+                    user_answer=answer.get("user_answer"),
+                    time_spent=answer.get("time_spent", 0),
+                    marked_for_review=answer.get("marked_for_review", False),
+                    answered_at=timezone.now() if answer.get("user_answer") else None,
+                )
+
+                # Check correctness
+                if answer.get("user_answer"):
+                    exam_q = ExamQuestion.objects.get(
+                        session=session, id=answer["question_id"]
+                    )
+                    exam_q.check_answer()
+                    exam_q.save(update_fields=["is_correct"])
 
         return Response(
-            {"status": "saved", "session": ExamSessionSerializer(session).data}
+            {
+                "status": "saved",
+                "saved_count": len(answers_data),
+                "session": ExamSessionSerializer(session).data,
+            }
         )
 
     @action(detail=True, methods=["post"])

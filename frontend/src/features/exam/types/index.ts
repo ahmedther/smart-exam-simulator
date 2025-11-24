@@ -1,3 +1,3 @@
-export * from "./examApi";
+export * from "./examApiTypes";
 export * from "./examStateTypes";
 export * from "./examStoreType";

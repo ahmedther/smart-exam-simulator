@@ -1,35 +1,31 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { createInitialExamState, examActions, examReducer } from "../reducers";
 import type { ExamStore } from "../types/examStoreType";
 import { toast } from "../../../utils";
 import type { Answer, ExamAction } from "../types";
+import { createInitialExamState, examActions, examReducer } from "../reducers";
 
 export const useExamStore = create<ExamStore>()(
   devtools(
     persist(
       (set, get) => ({
-        // Initial state
         state: createInitialExamState(),
         sessionId: "",
         session: null,
         questions: [],
 
-        // Dispatch action to reducer
         dispatch: (action: ExamAction) => {
           set((store) => ({
             state: examReducer(store.state, action),
           }));
-          // ✅ Recalculate statistics after state changes
         },
 
-        // ✅ Initialize store with API data
         initialize: (data) => {
           const { session, questions } = data;
 
-          // Restore any existing answers from server
           const answers = new Map<string, Answer>();
           const markedQuestions = new Set<string>();
+
           questions.forEach((q) => {
             if (q.user_answer) {
               answers.set(String(q.id), {
@@ -50,7 +46,7 @@ export const useExamStore = create<ExamStore>()(
             session,
             questions,
             state: {
-              currentQuestionIndex: session.current_question_number - 1, // Convert to 0-based
+              currentQuestionIndex: session.current_question_number - 1,
               answers,
               markedQuestions,
               isPaused: false,
@@ -58,32 +54,27 @@ export const useExamStore = create<ExamStore>()(
               totalTimeSpent: session.total_time_spent,
               remainingTime: session.remaining_time,
               pauseSource: null,
-              // remainingTime: 5,
             },
           });
         },
 
-        // Computed values
         getCurrentQuestion: () => {
           const { state, questions } = get();
           return questions[state.currentQuestionIndex];
         },
 
         getCurrentAnswer: () => {
-          const { state } = get();
           const currentQuestion = get().getCurrentQuestion();
           if (!currentQuestion) return undefined;
-          return state.answers.get(String(currentQuestion.id));
+          return get().state.answers.get(String(currentQuestion.id));
         },
 
         isCurrentMarked: () => {
-          const { state } = get();
           const currentQuestion = get().getCurrentQuestion();
           if (!currentQuestion) return false;
-          return state.markedQuestions.has(String(currentQuestion.id));
+          return get().state.markedQuestions.has(String(currentQuestion.id));
         },
 
-        // ✅ High-level actions that use the reducer
         selectAnswer: (optionId: string) => {
           const currentQuestion = get().getCurrentQuestion();
           if (!currentQuestion) return;
@@ -95,10 +86,11 @@ export const useExamStore = create<ExamStore>()(
         nextQuestion: () => {
           const { state, questions } = get();
           const currentQuestion = get().getCurrentQuestion();
-          if (!currentQuestion) return;
-
-          // Don't go past last question
-          if (state.currentQuestionIndex >= questions.length - 1) return;
+          if (
+            !currentQuestion ||
+            state.currentQuestionIndex >= questions.length - 1
+          )
+            return;
 
           const timeSpent = state.isPaused
             ? 0
@@ -112,10 +104,7 @@ export const useExamStore = create<ExamStore>()(
         previousQuestion: () => {
           const { state } = get();
           const currentQuestion = get().getCurrentQuestion();
-          if (!currentQuestion) return;
-
-          // Don't go before first question
-          if (state.currentQuestionIndex === 0) return;
+          if (!currentQuestion || state.currentQuestionIndex === 0) return;
 
           const timeSpent = state.isPaused
             ? 0
@@ -133,24 +122,34 @@ export const useExamStore = create<ExamStore>()(
         },
 
         togglePause: () => {
-          get().dispatch(examActions.setPause("toggle", "user"));
+          const currentQuestion = get().getCurrentQuestion();
+          get().dispatch(
+            examActions.setPause(
+              "toggle",
+              "user",
+              currentQuestion ? String(currentQuestion.id) : undefined
+            )
+          );
         },
 
         pauseForActivity: () => {
-          get().dispatch(examActions.setPause(true, "system"));
+          const currentQuestion = get().getCurrentQuestion();
+          get().dispatch(
+            examActions.setPause(
+              true,
+              "system",
+              currentQuestion ? String(currentQuestion.id) : undefined
+            )
+          );
         },
 
         resumeFromActivity: () => {
           get().dispatch(examActions.setPause(false, "system"));
         },
+
         decrementTime: () => {
           get().dispatch(examActions.decrementTime());
 
-          // if (newTime <= 0) {
-          //   // NOW we use the generic dispatch because submitting DOES affect statistics/state
-          //   get().dispatch(examActions.submitExam());
-          //   toast.warning("Time expired! Auto-submitting...");
-          // }
           const remaining = get().state.remainingTime;
           if (remaining === 600) toast.info("10 minutes left!");
           if (remaining === 300) toast.info("5 minutes left!");
@@ -162,10 +161,8 @@ export const useExamStore = create<ExamStore>()(
         goToQuestion: (index: number) => {
           const { state, questions } = get();
           const currentQuestion = get().getCurrentQuestion();
-          if (!currentQuestion) return;
-
-          // Validate index
-          if (index < 0 || index >= questions.length) return;
+          if (!currentQuestion || index < 0 || index >= questions.length)
+            return;
 
           const timeSpent = state.isPaused
             ? 0
@@ -207,27 +204,9 @@ export const useExamStore = create<ExamStore>()(
                 : q
             ),
           })),
-
-        // getStatistics: () => {
-        //   const { questions, state } = get();
-        //   const answeredCount = state.answers.size;
-        //   const markedCount = state.markedQuestions.size;
-
-        //   return {
-        //     totalQuestions: questions.length,
-        //     answeredQuestions: answeredCount,
-        //     markedQuestions: markedCount,
-        //     unansweredQuestions: questions.length - answeredCount,
-        //     progress:
-        //       questions.length > 0
-        //         ? Math.round((answeredCount / questions.length) * 100)
-        //         : 0,
-        //   };
-        // },
       }),
       {
         name: "exam-storage",
-        // Only persist essential data
         partialize: (state) => ({
           sessionId: state.sessionId,
           state: {

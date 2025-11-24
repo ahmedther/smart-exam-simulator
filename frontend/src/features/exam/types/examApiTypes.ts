@@ -1,3 +1,4 @@
+import type { Answer } from "./examStateTypes";
 import type { Session } from "./examStoreType";
 
 export interface PaginatedResponse<T> {
@@ -38,4 +39,21 @@ export interface ApiError {
     status?: number;
   };
   message?: string;
+}
+export interface AutoSaveInput {
+  currentQuestionIndex: number;
+  totalTimeSpent: number;
+  answers: Map<string, Answer>;
+  markedQuestions: Set<string>;
+}
+
+export interface AutoSavePayload {
+  total_time_spent: number;
+  current_question_number: number;
+  answers: Array<{
+    question_id: string;
+    user_answer: string | null;
+    time_spent: number;
+    marked_for_review: boolean;
+  }>;
 }
