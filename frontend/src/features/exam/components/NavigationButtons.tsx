@@ -1,5 +1,6 @@
 import ConfirmModal from "../../../components/ui/ConfirmModal";
 import { useNavigationButtons } from "../hooks";
+import ExamSuccessModal from "./ExamSuccessModal";
 
 export default function NavigationButtons() {
   const page = useNavigationButtons();
@@ -114,7 +115,6 @@ export default function NavigationButtons() {
             </button>
           )}
         </div>
-
         <ConfirmModal
           isOpen={page.showSubmitModal}
           onConfirm={page.handleConfirmSubmit}
@@ -130,6 +130,11 @@ export default function NavigationButtons() {
           confirmText="Yes, Submit Exam"
           cancelText="Review Answers"
           variant="success"
+        />
+        <ExamSuccessModal
+          isOpen={page.isSuccess}
+          onNavigate={page.handleNavigateToResults}
+          sessionId={page.sessionId}
         />
       </div>
       {page.isError && page.isLastQuestion && (

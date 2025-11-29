@@ -1,0 +1,70 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+@theme {
+  /* Dark theme - Indigo to Purple gradient */
+  --color-primary: #6366f1;
+  --color-secondary: #a78bfa;
+  --color-surface: #0f172a;
+  --color-surface-variant: #1e293b;
+  --color-background: #020617;
+  --color-on-surface: #f1f5f9;
+  --color-on-surface-variant: #cbd5e1;
+  --color-outline: #334155;
+  --color-outline-variant: #475569;
+  --color-accent: #8b5cf6;
+  --color-accent-light: #c4b5fd;
+  --gradient-from: #4f46e5;
+  --gradient-to: #7c3aed;
+}
+
+@layer base {
+  html {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      sans-serif;
+    background: linear-gradient(to bottom right, #0f172a, #020617, #1a1f3a);
+    background-attachment: fixed;
+    color: var(--color-on-surface);
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  body {
+    min-height: 100vh;
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: #6366f1;
+    color: #f1f5f9;
+  }
+}
+
+@layer utilities {
+  .gradient-primary {
+    background: linear-gradient(
+      to right,
+      var(--gradient-from),
+      var(--gradient-to)
+    );
+  }
+
+  .text-gradient {
+    background: linear-gradient(
+      to right,
+      var(--gradient-from),
+      var(--gradient-to)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .glassmorphism-dark {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(100, 116, 139, 0.2);
+  }
+}

@@ -5,14 +5,14 @@ import { useExamStore } from "../../exam/stores/examStore";
 
 export function useCheckActiveExam() {
   const location = useLocation();
-  const isOnExamPage = location.pathname.startsWith("/exam");
+  const isOnHomePage = location.pathname === "/";
   const reset = useExamStore((s) => s.reset);
 
   const startExam = useStartExam();
   const navigate = useNavigate();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const sessionId = useExamStore((s) => s.sessionId);
-  const { data, isLoading } = useCheckActiveSession(!isOnExamPage);
+  const { data, isLoading } = useCheckActiveSession(isOnHomePage);
   const hasActiveSession = data?.has_active_session ?? false;
 
   // Use useCallback to memoize handlers and prevent unnecessary re-renders
@@ -49,7 +49,7 @@ export function useCheckActiveExam() {
     hasActiveSession,
     isLoading,
     isStarting: startExam.isPending,
-    isOnExamPage,
+    isOnHomePage,
     sessionId,
 
     // Handlers

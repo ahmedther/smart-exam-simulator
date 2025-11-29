@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import ExamHeader from "../features/exam/components/ExamHeader";
-import { useAutoSave, userExamSessionOptions } from "../features/exam/hooks";
-import Spinner from "../components/ui/Spinner";
-import { useExamStore } from "../features/exam/stores/examStore";
+import ExamHeader from "../../features/exam/components/ExamHeader";
+import { useAutoSave, userExamSessionOptions } from "../../features/exam/hooks";
+import Spinner from "../../components/ui/Spinner";
+import { useExamStore } from "../../features/exam/stores/examStore";
 import { useEffect } from "react";
-import QuestionCard from "../features/exam/components/QuestionCard";
-import MarkedQuestionsPanel from "../features/exam/components/MarkedQuestionsPanel";
-import type { ExamSession } from "../features/exam/types";
-import ExamSummaryPanel from "../features/exam/components/ExamSummaryPanel";
-import ErrorFallback from "../components/layouts/ErrorFallback";
+import QuestionCard from "../../features/exam/components/QuestionCard";
+import MarkedQuestionsPanel from "../../features/exam/components/MarkedQuestionsPanel";
+import type { ExamSession } from "../../features/exam/types";
+import ExamSummaryPanel from "../../features/exam/components/ExamSummaryPanel";
+import ErrorFallback from "../../components/layouts/ErrorFallback";
 
 export const Route = createFileRoute("/exam/$sessionId")({
   loader: ({ context: { queryClient }, params: { sessionId } }) => {

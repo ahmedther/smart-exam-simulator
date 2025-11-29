@@ -3,12 +3,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useExamStore } from "../stores/examStore";
 import { examApi } from "../../../api/examApi";
 import { useCallback, useEffect, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 export function useExamSubmission() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const sessionId = useExamStore((s) => s.sessionId);
   const getExamProgressPayload = useExamStore((s) => s.getExamProgressPayload);
   const hasSubmittedRef = useRef(false);
+  const reset = useExamStore((s) => s.reset);
 
   const mutation = useMutation({
     mutationKey: ["submit-exam", sessionId],
@@ -19,8 +22,7 @@ export function useExamSubmission() {
     },
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    onSuccess: (data) => {
-      console.log("[Submission] Success:", data);
+    onSuccess: () => {
       hasSubmittedRef.current = true;
       queryClient.invalidateQueries({
         queryKey: ["exam-session", sessionId],
@@ -54,6 +56,11 @@ export function useExamSubmission() {
     return mutation.mutateAsync();
   }, [mutation]);
 
+  const handleNavigateToResults = () => {
+    reset();
+    navigate({ to: `/results/${sessionId}` });
+  };
+
   return {
     submitExam,
     isSubmitting: mutation.isPending,
@@ -64,5 +71,6 @@ export function useExamSubmission() {
     isError: mutation.isError,
     data: mutation.data,
     sessionId,
+    handleNavigateToResults,
   };
 }

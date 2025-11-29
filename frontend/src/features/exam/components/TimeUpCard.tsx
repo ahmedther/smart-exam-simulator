@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 import { useExamSubmission } from "../hooks/useExamSubmission";
+import ExamSuccessModal from "./ExamSuccessModal";
 
 const getButtonState = (
   isSubmitting = false,
@@ -35,8 +36,16 @@ const getButtonState = (
 };
 
 export default function TimeUpCard() {
-  const { submitExam, isSubmitting, isRetrying, isError, retryCount } =
-    useExamSubmission();
+  const {
+    submitExam,
+    isSubmitting,
+    isRetrying,
+    isError,
+    retryCount,
+    isSuccess,
+    sessionId,
+    handleNavigateToResults,
+  } = useExamSubmission();
   const hasAutoSubmittedRef = useRef(false);
   const [countdown, setCountdown] = useState(3); // ✅ Track countdown
 
@@ -78,6 +87,15 @@ export default function TimeUpCard() {
       submitExam().catch(console.error);
     }
   };
+
+  if (isSuccess)
+    return (
+      <ExamSuccessModal
+        isOpen={isSuccess}
+        onNavigate={handleNavigateToResults}
+        sessionId={sessionId}
+      />
+    );
 
   return createPortal(
     <AnimatePresence>

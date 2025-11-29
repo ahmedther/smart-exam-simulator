@@ -27,5 +27,5 @@
     "esModuleInterop": true, // helpful for default/commonjs interop
     "resolveJsonModule": false
   },
-  "include": ["src"]
+  "include": ["src", "src/routes/exam/$sessionId.tsx"]
 }

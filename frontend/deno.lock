@@ -20,6 +20,7 @@
     "npm:globals@^16.5.0": "16.5.0",
     "npm:install@0.13": "0.13.0",
     "npm:lodash@^4.17.21": "4.17.21",
+    "npm:lucide-react@0.555": "0.555.0_react@19.2.0",
     "npm:react-dom@^19.2.0": "19.2.0_react@19.2.0",
     "npm:react-icons@^5.5.0": "5.5.0_react@19.2.0",
     "npm:react@^19.2.0": "19.2.0",
@@ -1750,6 +1751,12 @@
         "yallist"
       ]
     },
+    "lucide-react@0.555.0_react@19.2.0": {
+      "integrity": "sha512-D8FvHUGbxWBRQM90NZeIyhAvkFfsh3u9ekrMvJ30Z6gnpBHS6HC6ldLg7tL45hwiIz/u66eKDtdA23gwwGsAHA==",
+      "dependencies": [
+        "react"
+      ]
+    },
     "magic-string@0.30.21": {
       "integrity": "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==",
       "dependencies": [
@@ -2226,6 +2233,7 @@
         "npm:globals@^16.5.0",
         "npm:install@0.13",
         "npm:lodash@^4.17.21",
+        "npm:lucide-react@0.555",
         "npm:react-dom@^19.2.0",
         "npm:react-icons@^5.5.0",
         "npm:react@^19.2.0",

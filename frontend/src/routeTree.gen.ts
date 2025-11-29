@@ -9,18 +9,30 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResultsRouteImport } from './routes/results'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ExamSessionIdRouteImport } from './routes/exam.$sessionId'
+import { Route as ResultsIndexRouteImport } from './routes/results/index'
+import { Route as ExamIndexRouteImport } from './routes/exam/index'
+import { Route as ResultsSessionIdRouteImport } from './routes/results/$sessionId'
+import { Route as ExamSessionIdRouteImport } from './routes/exam/$sessionId'
 
-const ResultsRoute = ResultsRouteImport.update({
-  id: '/results',
-  path: '/results',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultsIndexRoute = ResultsIndexRouteImport.update({
+  id: '/results/',
+  path: '/results/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExamIndexRoute = ExamIndexRouteImport.update({
+  id: '/exam/',
+  path: '/exam/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultsSessionIdRoute = ResultsSessionIdRouteImport.update({
+  id: '/results/$sessionId',
+  path: '/results/$sessionId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExamSessionIdRoute = ExamSessionIdRouteImport.update({
@@ -31,48 +43,81 @@ const ExamSessionIdRoute = ExamSessionIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/results': typeof ResultsRoute
   '/exam/$sessionId': typeof ExamSessionIdRoute
+  '/results/$sessionId': typeof ResultsSessionIdRoute
+  '/exam': typeof ExamIndexRoute
+  '/results': typeof ResultsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/results': typeof ResultsRoute
   '/exam/$sessionId': typeof ExamSessionIdRoute
+  '/results/$sessionId': typeof ResultsSessionIdRoute
+  '/exam': typeof ExamIndexRoute
+  '/results': typeof ResultsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/results': typeof ResultsRoute
   '/exam/$sessionId': typeof ExamSessionIdRoute
+  '/results/$sessionId': typeof ResultsSessionIdRoute
+  '/exam/': typeof ExamIndexRoute
+  '/results/': typeof ResultsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/results' | '/exam/$sessionId'
+  fullPaths:
+    | '/'
+    | '/exam/$sessionId'
+    | '/results/$sessionId'
+    | '/exam'
+    | '/results'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/results' | '/exam/$sessionId'
-  id: '__root__' | '/' | '/results' | '/exam/$sessionId'
+  to: '/' | '/exam/$sessionId' | '/results/$sessionId' | '/exam' | '/results'
+  id:
+    | '__root__'
+    | '/'
+    | '/exam/$sessionId'
+    | '/results/$sessionId'
+    | '/exam/'
+    | '/results/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ResultsRoute: typeof ResultsRoute
   ExamSessionIdRoute: typeof ExamSessionIdRoute
+  ResultsSessionIdRoute: typeof ResultsSessionIdRoute
+  ExamIndexRoute: typeof ExamIndexRoute
+  ResultsIndexRoute: typeof ResultsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/results': {
-      id: '/results'
-      path: '/results'
-      fullPath: '/results'
-      preLoaderRoute: typeof ResultsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/results/': {
+      id: '/results/'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof ResultsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exam/': {
+      id: '/exam/'
+      path: '/exam'
+      fullPath: '/exam'
+      preLoaderRoute: typeof ExamIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/results/$sessionId': {
+      id: '/results/$sessionId'
+      path: '/results/$sessionId'
+      fullPath: '/results/$sessionId'
+      preLoaderRoute: typeof ResultsSessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exam/$sessionId': {
@@ -87,8 +132,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ResultsRoute: ResultsRoute,
   ExamSessionIdRoute: ExamSessionIdRoute,
+  ResultsSessionIdRoute: ResultsSessionIdRoute,
+  ExamIndexRoute: ExamIndexRoute,
+  ResultsIndexRoute: ResultsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

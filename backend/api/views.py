@@ -19,6 +19,7 @@ from .serializers import (
     ExamResultsSerializer,
 )
 from api.helpers import create_exam_session
+from api.analytics import ExamAnalyticsBuilder
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -267,28 +268,11 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def submit(self, request, session_id=None):
-        print(request.data)
         """
         POST /api/exam-sessions/{session_id}/submit/
-        Submit and complete the exam with proper validation and results
 
-        Body: {
-            "total_time_spent": 14400,
-            "current_question_number": 225,
-            "answers": [
-                {
-                    "question_id": "123",
-                    "user_answer": "a",
-                    "time_spent": 30,
-                    "marked_for_review": false
-                }
-            ]
-        }
-
-        Returns: {
-            "session": {...},
-            "results": {...}
-        }
+        Submit and complete exam with comprehensive analytics.
+        Submission type automatically inferred from remaining_time.
         """
         try:
             session = self.get_object()
@@ -298,7 +282,7 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # ✅ Validation: Check if already completed
+        # ✅ Validation: Already completed
         if session.status == "completed":
             return Response(
                 {
@@ -308,19 +292,20 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ✅ Validation: Check if session is active
+        # ✅ Validation: Session is active
         if session.status not in ["in_progress", "paused"]:
             return Response(
                 {"error": f"Cannot submit session with status: {session.status}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # ✅ Parse request
         try:
-            # Parse request data (handle JSON body)
-            if request.content_type == "application/json":
-                data = request.data
-            else:
-                data = json.loads(request.body)
+            data = (
+                request.data
+                if request.content_type == "application/json"
+                else json.loads(request.body)
+            )
         except Exception as e:
             return Response(
                 {"error": f"Invalid request data: {str(e)}"},
@@ -329,7 +314,7 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
 
         with transaction.atomic():
             try:
-                # ✅ Update session final data
+                # ✅ Update session final state
                 session.total_time_spent = data.get(
                     "total_time_spent", session.total_time_spent
                 )
@@ -337,76 +322,56 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
                     "current_question_number", session.current_question_number
                 )
 
-                # ✅ Bulk update final answers before marking complete
-                answers_data = data.get("answers", [])
-
-                for answer in answers_data:
+                # ✅ Bulk update answers
+                for answer in data.get("answers", []):
                     try:
                         exam_q = ExamQuestion.objects.select_for_update().get(
                             session=session, id=answer.get("question_id")
                         )
 
-                        # ✅ Set first_viewed_at if not already set
                         if not exam_q.first_viewed_at:
                             exam_q.first_viewed_at = timezone.now()
 
-                        # ✅ Always update time tracking
                         exam_q.time_spent = answer.get("time_spent", exam_q.time_spent)
                         exam_q.marked_for_review = answer.get(
                             "marked_for_review", False
                         )
 
-                        # ✅ Update answer if provided
                         user_answer = answer.get("user_answer")
                         if user_answer is not None:
                             exam_q.user_answer = user_answer
                             exam_q.answered_at = timezone.now()
-                            exam_q.check_answer()  # Calculate is_correct
+                            exam_q.check_answer()
 
                         exam_q.save()
-
                     except ExamQuestion.DoesNotExist:
-                        # Log but continue - question might be invalid
-                        continue
-                    except Exception as e:
-                        print(
-                            f"Error updating answer {answer.get('question_id')}: {str(e)}"
-                        )
                         continue
 
-                # ✅ Mark session as completed
+                # ✅ Mark complete and calculate scores
                 session.status = "completed"
                 session.completed_at = timezone.now()
-
-                # ✅ Calculate scores - NOW that all answers are finalized
                 session.correct_answers = session.exam_questions.filter(
                     is_correct=True
                 ).count()
                 session.calculate_score()
                 session.save()
 
-                # ✅ Log submit activity with metadata
+                # ✅ Infer submission type from remaining time
+                remaining_time = session.remaining_time()
+                submission_type = "timeout" if remaining_time == 0 else "manual"
+
+                # ✅ Log activity
                 SessionActivity.objects.create(
                     session=session,
                     activity_type="submit",
-                    metadata={
-                        "total_time_spent": session.total_time_spent,
-                        "correct_answers": session.correct_answers,
-                        "scaled_score": session.scaled_score,
-                    },
+                    metadata={"submission_type": submission_type},
                 )
 
-                # ✅ Get finalized session data
-                session_serializer = ExamSessionSerializer(session)
-
-                # ✅ Get results
-                results_serializer = ExamResultsSerializer(session)
-
+                # ✅ Return response
                 return Response(
                     {
-                        "session": session_serializer.data,
-                        "results": results_serializer.data,
-                        "message": f"Exam submitted successfully. Score: {session.scaled_score}",
+                        "message": "Exam submitted successfully.",
+                        "session_id": str(session.session_id),
                     },
                     status=status.HTTP_200_OK,
                 )

@@ -24,8 +24,16 @@ export const useNavigationButtons = () => {
     Array.from(answers.values()).filter((a) => a.selectedOptionId !== null)
       .length;
 
-  const { submitExam, isSubmitting, isRetrying, isError, retryCount } =
-    useExamSubmission();
+  const {
+    submitExam,
+    isSubmitting,
+    isRetrying,
+    isError,
+    retryCount,
+    isSuccess,
+    sessionId,
+    handleNavigateToResults,
+  } = useExamSubmission();
 
   const handleSubmitClick = () => {
     setShowSubmitModal(true);
@@ -49,11 +57,14 @@ export const useNavigationButtons = () => {
     isRetrying,
     isError,
     retryCount,
+    isSuccess,
+    sessionId,
     toggleMark,
     nextQuestion,
     previousQuestion,
     setShowSubmitModal,
     handleSubmitClick,
     handleConfirmSubmit,
+    handleNavigateToResults,
   };
 };

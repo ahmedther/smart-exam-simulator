@@ -2,7 +2,8 @@ class EPPPConfig:
     """EPPP Exam Configuration Constants"""
 
     TOTAL_QUESTIONS = 11
-    EXAM_DURATION_SECONDS = 20  # 4h 15min
+    # EXAM_DURATION_SECONDS = 15,300   # 4h 15min
+    EXAM_DURATION_SECONDS = 15
     PASSING_SCORE = 500
     SUPERVISED_PASSING_SCORE = 450
 

@@ -12,7 +12,7 @@ export default function NavLinkBar() {
           <CustomNavLink text="Home" to="/" />
         </NavItem>
 
-        {page.isOnExamPage ? (
+        {!page.isOnHomePage ? (
           <NavItem>
             <CustomNavLink text="Exam" to={`/exam/${page.sessionId}`} />
           </NavItem>
