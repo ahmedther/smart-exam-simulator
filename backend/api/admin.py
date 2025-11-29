@@ -75,7 +75,6 @@ class ExamSessionAdmin(admin.ModelAdmin):
         "session_id",
         "status",
         "current_question_number",
-        "score",
         "started_at",
         "completed_at",
         "time_spent_display",
@@ -86,7 +85,6 @@ class ExamSessionAdmin(admin.ModelAdmin):
         "session_id",
         "started_at",
         "completed_at",
-        "score",
         "correct_answers",
     ]
     ordering = ["-started_at"]
@@ -106,7 +104,7 @@ class ExamSessionAdmin(admin.ModelAdmin):
             },
         ),
         ("Progress", {"fields": ("current_question_number", "total_questions")}),
-        ("Results", {"fields": ("score", "correct_answers")}),
+        ("Results", {"fields": ("scaled_score", "correct_answers")}),
     )
 
     def time_spent_display(self, obj):

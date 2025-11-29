@@ -6,6 +6,7 @@ import { useExamStore } from "../../exam/stores/examStore";
 export function useCheckActiveExam() {
   const location = useLocation();
   const isOnExamPage = location.pathname.startsWith("/exam");
+  const reset = useExamStore((s) => s.reset);
 
   const startExam = useStartExam();
   const navigate = useNavigate();
@@ -26,8 +27,9 @@ export function useCheckActiveExam() {
   //// Handlers
   const handleConfirmNewQuiz = useCallback(() => {
     setShowConfirmModal(false);
+    reset();
     startExam.mutate();
-  }, [startExam]);
+  }, [reset, startExam]);
 
   const handleCancelNewQuiz = useCallback(() => {
     setShowConfirmModal(false);

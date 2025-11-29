@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.utils import timezone
+import json
 from django.db import transaction
 from .models import (
     Category,
@@ -13,11 +14,9 @@ from .models import (
 )
 from .serializers import (
     CategorySerializer,
-    QuestionSerializer,
     ExamSessionSerializer,
-    ExamSessionDetailSerializer,
     ExamQuestionSerializer,
-    ExamQuestionResultSerializer,
+    ExamResultsSerializer,
 )
 from api.helpers import create_exam_session
 
@@ -97,11 +96,6 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
     serializer_class = ExamSessionSerializer
     permission_classes = [AllowAny]
     lookup_field = "session_id"
-
-    def get_serializer_class(self):
-        if self.action == "retrieve":
-            return ExamSessionDetailSerializer
-        return ExamSessionSerializer
 
     @action(detail=False, methods=["post"])
     def start(self, request):
@@ -192,36 +186,6 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=True, methods=["patch"])
-    def pause(self, request, session_id=None):
-        """
-        PATCH /api/exam-sessions/{session_id}/pause/
-        Pause the exam session
-
-        Body: {
-            "total_time_spent": 3600  // seconds
-        }
-        """
-        session = self.get_object()
-
-        if session.status != "in_progress":
-            return Response(
-                {"error": "Can only pause in-progress sessions"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        session.status = "paused"
-        session.paused_at = timezone.now()
-        session.total_time_spent = request.data.get(
-            "total_time_spent", session.total_time_spent
-        )
-        session.save()
-
-        # Log pause activity
-        SessionActivity.objects.create(session=session, activity_type="pause")
-
-        return Response(ExamSessionSerializer(session).data)
-
-    @action(detail=True, methods=["patch", "post"])
     def autosave(self, request, session_id=None):
         """
         PATCH /api/exam-sessions/{session_id}/autosave/
@@ -239,110 +203,219 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
             ]
         }
         """
-        try:
-            if request.content_type == "application/json":
-                data = request.data
-            else:
-                # sendBeacon might send as text/plain
-                import json
 
-                data = json.loads(request.body)
+        try:
+            data = (
+                request.data
+                if request.content_type == "application/json"
+                else json.loads(request.body)
+            )
         except:
             data = request.data
+
         session = self.get_object()
 
         for d in data.items():
             print(d)
+
         if session.status not in ["in_progress", "paused"]:
             return Response(
                 {"error": "Session is not active"}, status=status.HTTP_400_BAD_REQUEST
             )
 
         with transaction.atomic():
-            # Update session
-            session.total_time_spent = request.data.get(
+
+            # Update session fields
+            session.total_time_spent = data.get(
                 "total_time_spent", session.total_time_spent
             )
-            session.current_question_number = request.data.get(
+            session.current_question_number = data.get(
                 "current_question_number", session.current_question_number
             )
             session.save()
 
-            # Batch update answers
+            # Bulk update answers
             answers_data = request.data.get("answers", [])
+
             for answer in answers_data:
-                ExamQuestion.objects.filter(
+                exam_q = ExamQuestion.objects.filter(
                     session=session, id=answer["question_id"]
-                ).update(
-                    user_answer=answer.get("user_answer"),
-                    time_spent=answer.get("time_spent", 0),
-                    marked_for_review=answer.get("marked_for_review", False),
-                    answered_at=timezone.now() if answer.get("user_answer") else None,
-                )
+                ).first()
 
-                # Check correctness
-                if answer.get("user_answer"):
-                    exam_q = ExamQuestion.objects.get(
-                        session=session, id=answer["question_id"]
-                    )
+                if not exam_q:
+                    continue
+
+                # ✅ ALWAYS set first_viewed_at if not set (even for null answers)
+                if not exam_q.first_viewed_at:
+                    exam_q.first_viewed_at = timezone.now()
+
+                # ✅ Always update time_spent and marked (even if user_answer is null)
+                exam_q.time_spent = answer.get("time_spent", 0)
+                exam_q.marked_for_review = answer.get("marked_for_review", False)
+
+                # ✅ Only update answer fields if user actually answered
+                user_answer = answer.get("user_answer")
+
+                if user_answer is not None:  # ✅ Changed: explicit None check
+                    exam_q.user_answer = user_answer
+                    exam_q.answered_at = timezone.now()
                     exam_q.check_answer()
-                    exam_q.save(update_fields=["is_correct"])
 
-        return Response(
-            {
-                "status": "saved",
-                "saved_count": len(answers_data),
-                "session": ExamSessionSerializer(session).data,
-            }
-        )
+                exam_q.save()
+
+        return Response({"status": "saved"}, status=200)
 
     @action(detail=True, methods=["post"])
     def submit(self, request, session_id=None):
+        print(request.data)
         """
         POST /api/exam-sessions/{session_id}/submit/
-        Submit and complete the exam
+        Submit and complete the exam with proper validation and results
 
-        Returns: Results with score and all questions with correct answers
+        Body: {
+            "total_time_spent": 14400,
+            "current_question_number": 225,
+            "answers": [
+                {
+                    "question_id": "123",
+                    "user_answer": "a",
+                    "time_spent": 30,
+                    "marked_for_review": false
+                }
+            ]
+        }
+
+        Returns: {
+            "session": {...},
+            "results": {...}
+        }
         """
-        session = self.get_object()
+        try:
+            session = self.get_object()
+        except ExamSession.DoesNotExist:
+            return Response(
+                {"error": "Session not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
+        # ✅ Validation: Check if already completed
         if session.status == "completed":
             return Response(
-                {"error": "Session already completed"},
+                {
+                    "error": "Session already completed",
+                    "session_id": str(session.session_id),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # ✅ Validation: Check if session is active
+        if session.status not in ["in_progress", "paused"]:
+            return Response(
+                {"error": f"Cannot submit session with status: {session.status}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # Parse request data (handle JSON body)
+            if request.content_type == "application/json":
+                data = request.data
+            else:
+                data = json.loads(request.body)
+        except Exception as e:
+            return Response(
+                {"error": f"Invalid request data: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         with transaction.atomic():
-            # Mark session as completed
-            session.status = "completed"
-            session.completed_at = timezone.now()
-            session.total_time_spent = request.data.get(
-                "total_time_spent", session.total_time_spent
-            )
+            try:
+                # ✅ Update session final data
+                session.total_time_spent = data.get(
+                    "total_time_spent", session.total_time_spent
+                )
+                session.current_question_number = data.get(
+                    "current_question_number", session.current_question_number
+                )
 
-            # Calculate score
-            session.correct_answers = session.exam_questions.filter(
-                is_correct=True
-            ).count()
-            session.calculate_score()
-            session.save()
+                # ✅ Bulk update final answers before marking complete
+                answers_data = data.get("answers", [])
 
-            # Log submit activity
-            SessionActivity.objects.create(session=session, activity_type="submit")
+                for answer in answers_data:
+                    try:
+                        exam_q = ExamQuestion.objects.select_for_update().get(
+                            session=session, id=answer.get("question_id")
+                        )
 
-            # Get all questions with results
-            exam_questions = session.exam_questions.select_related(
-                "question", "question__category", "category"
-            ).all()
+                        # ✅ Set first_viewed_at if not already set
+                        if not exam_q.first_viewed_at:
+                            exam_q.first_viewed_at = timezone.now()
 
-            return Response(
-                {
-                    "session": ExamSessionSerializer(session).data,
-                    "results": ExamQuestionResultSerializer(
-                        exam_questions, many=True
-                    ).data,
-                }
-            )
+                        # ✅ Always update time tracking
+                        exam_q.time_spent = answer.get("time_spent", exam_q.time_spent)
+                        exam_q.marked_for_review = answer.get(
+                            "marked_for_review", False
+                        )
+
+                        # ✅ Update answer if provided
+                        user_answer = answer.get("user_answer")
+                        if user_answer is not None:
+                            exam_q.user_answer = user_answer
+                            exam_q.answered_at = timezone.now()
+                            exam_q.check_answer()  # Calculate is_correct
+
+                        exam_q.save()
+
+                    except ExamQuestion.DoesNotExist:
+                        # Log but continue - question might be invalid
+                        continue
+                    except Exception as e:
+                        print(
+                            f"Error updating answer {answer.get('question_id')}: {str(e)}"
+                        )
+                        continue
+
+                # ✅ Mark session as completed
+                session.status = "completed"
+                session.completed_at = timezone.now()
+
+                # ✅ Calculate scores - NOW that all answers are finalized
+                session.correct_answers = session.exam_questions.filter(
+                    is_correct=True
+                ).count()
+                session.calculate_score()
+                session.save()
+
+                # ✅ Log submit activity with metadata
+                SessionActivity.objects.create(
+                    session=session,
+                    activity_type="submit",
+                    metadata={
+                        "total_time_spent": session.total_time_spent,
+                        "correct_answers": session.correct_answers,
+                        "scaled_score": session.scaled_score,
+                    },
+                )
+
+                # ✅ Get finalized session data
+                session_serializer = ExamSessionSerializer(session)
+
+                # ✅ Get results
+                results_serializer = ExamResultsSerializer(session)
+
+                return Response(
+                    {
+                        "session": session_serializer.data,
+                        "results": results_serializer.data,
+                        "message": f"Exam submitted successfully. Score: {session.scaled_score}",
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+            except Exception as e:
+                return Response(
+                    {"error": f"Error submitting exam: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
 
     @action(detail=False, methods=["post"], url_path="check-active")
     def check_active(self, request):
@@ -379,109 +452,6 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
         return Response({"has_active_session": False})
 
 
-class ExamQuestionViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for individual exam questions
-    """
-
-    queryset = ExamQuestion.objects.all()
-    serializer_class = ExamQuestionSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        """Filter by session if provided"""
-        queryset = ExamQuestion.objects.select_related(
-            "question", "question__category", "category", "session"
-        )
-        session_id = self.request.query_params.get("session_id")
-        if session_id:
-            queryset = queryset.filter(session__session_id=session_id)
-        return queryset
-
-    @action(detail=True, methods=["patch"])
-    def answer(self, request, pk=None):
-        """
-        PATCH /api/exam-questions/{id}/answer/
-        Submit answer for a question
-
-        Body: {
-            "user_answer": "d",
-            "time_spent": 45
-        }
-        """
-        exam_question = self.get_object()
-
-        user_answer = request.data.get("user_answer")
-        time_spent = request.data.get("time_spent", 0)
-
-        if user_answer not in ["a", "b", "c", "d"]:
-            return Response(
-                {"error": "Invalid answer. Must be a, b, c, or d"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Update answer
-        exam_question.user_answer = user_answer
-        exam_question.time_spent = time_spent
-        exam_question.answered_at = timezone.now()
-        exam_question.check_answer()  # Check if correct
-        exam_question.save()
-
-        return Response(ExamQuestionSerializer(exam_question).data)
-
-    @action(detail=True, methods=["patch"])
-    def toggle_mark(self, request, pk=None):
-        """
-        PATCH /api/exam-questions/{id}/toggle-mark/
-        Toggle marked for review status
-        """
-        exam_question = self.get_object()
-        exam_question.marked_for_review = not exam_question.marked_for_review
-        exam_question.save()
-
-        return Response({"marked_for_review": exam_question.marked_for_review})
-
-    @action(detail=True, methods=["patch"])
-    def update_category(self, request, pk=None):
-        """
-        PATCH /api/exam-questions/{id}/update-category/
-        Update the category for this question
-
-        Body: {
-            "category_id": 5
-        }
-        """
-        exam_question = self.get_object()
-        category_id = request.data.get("category_id")
-
-        if not category_id:
-            return Response(
-                {"error": "category_id is required"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            category = Category.objects.get(id=category_id)
-            exam_question.category = category
-            exam_question.save()
-
-            # Log category change
-            SessionActivity.objects.create(
-                session=exam_question.session,
-                activity_type="category_change",
-                metadata={
-                    "question_number": exam_question.question_number,
-                    "new_category": category.name,
-                },
-            )
-
-            return Response(ExamQuestionSerializer(exam_question).data)
-
-        except Category.DoesNotExist:
-            return Response(
-                {"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-
-
 """
 ===========================================
 API ENDPOINTS CREATED:
@@ -500,10 +470,4 @@ EXAM SESSIONS:
 - PATCH  /api/exam-sessions/{session_id}/autosave/ - Auto-save progress
 - POST   /api/exam-sessions/{session_id}/submit/   - Submit and complete exam
 
-EXAM QUESTIONS:
-- GET    /api/exam-questions/?session_id={uuid}    - Get all questions for session
-- GET    /api/exam-questions/{id}/                 - Get specific question
-- PATCH  /api/exam-questions/{id}/answer/          - Submit answer
-- PATCH  /api/exam-questions/{id}/toggle-mark/     - Mark/unmark for review
-- PATCH  /api/exam-questions/{id}/update-category/ - Update question category
 """

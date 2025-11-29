@@ -93,6 +93,7 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
             "user_answer",
             "time_spent",
             "marked_for_review",
+            "first_viewed_at",
             "answered_at",
         ]
         read_only_fields = [
@@ -109,46 +110,10 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
         ]
 
 
-class ExamQuestionResultSerializer(serializers.ModelSerializer):
-    """Serializer for showing results after completion (includes correct answer & explanation)"""
-
-    question_text = serializers.CharField(
-        source="question.question_text", read_only=True
-    )
-    choice_a = serializers.CharField(source="question.choice_a", read_only=True)
-    choice_b = serializers.CharField(source="question.choice_b", read_only=True)
-    choice_c = serializers.CharField(source="question.choice_c", read_only=True)
-    choice_d = serializers.CharField(source="question.choice_d", read_only=True)
-    correct_answer = serializers.CharField(
-        source="question.correct_answer", read_only=True
-    )
-    explanation = serializers.CharField(source="question.explanation", read_only=True)
-    category_name = serializers.CharField(source="category.name", read_only=True)
-
-    class Meta:
-        model = ExamQuestion
-        fields = [
-            "id",
-            "question_number",
-            "question_text",
-            "choice_a",
-            "choice_b",
-            "choice_c",
-            "choice_d",
-            "user_answer",
-            "correct_answer",
-            "is_correct",
-            "explanation",
-            "category_name",
-            "time_spent",
-        ]
-
-
 class ExamSessionSerializer(serializers.ModelSerializer):
     """Serializer for ExamSession"""
 
     remaining_time = serializers.SerializerMethodField()
-    progress_percentage = serializers.SerializerMethodField()
 
     class Meta:
         model = ExamSession
@@ -162,49 +127,81 @@ class ExamSessionSerializer(serializers.ModelSerializer):
             "remaining_time",
             "current_question_number",
             "total_questions",
-            "score",
+            "scaled_score",
             "correct_answers",
-            "progress_percentage",
         ]
         read_only_fields = [
             "session_id",
             "started_at",
             "completed_at",
-            "score",
+            "scaled_score",
             "correct_answers",
         ]
 
     def get_remaining_time(self, obj):
         return obj.remaining_time()
 
-    def get_progress_percentage(self, obj):
-        if obj.total_questions > 0:
-            return int((obj.current_question_number / obj.total_questions) * 100)
-        return 0
 
+class ExamResultsSerializer(serializers.ModelSerializer):
+    """EPPP-style results display"""
 
-class ExamSessionDetailSerializer(serializers.ModelSerializer):
-    """Detailed session with all questions"""
-
-    exam_questions = ExamQuestionSerializer(many=True, read_only=True)
-    remaining_time = serializers.SerializerMethodField()
+    scaled_score = serializers.IntegerField()
+    percentage = serializers.FloatField()
+    passed = serializers.BooleanField()
+    average_time_per_question = serializers.FloatField()
+    performance_level = serializers.SerializerMethodField()
+    category_performance = serializers.SerializerMethodField()
 
     class Meta:
         model = ExamSession
         fields = [
             "session_id",
-            "status",
-            "started_at",
             "completed_at",
             "total_time_spent",
-            "exam_duration",
-            "remaining_time",
-            "current_question_number",
             "total_questions",
-            "score",
             "correct_answers",
-            "exam_questions",
+            "scaled_score",  # 200-800
+            "percentage",  # Raw %
+            "passing_score",  # Usually 500
+            "passed",
+            "performance_level",  # Descriptive text
+            "average_time_per_question",
+            "category_performance",
         ]
 
-    def get_remaining_time(self, obj):
-        return obj.remaining_time()
+    def get_performance_level(self, obj):
+        """Descriptive performance level"""
+        if not obj.scaled_score:
+            return None
+
+        score = obj.scaled_score
+        if score >= 700:
+            return "Excellent"
+        elif score >= 600:
+            return "Very Good"
+        elif score >= 500:
+            return "Pass"
+        elif score >= 450:
+            return "Supervised Practice Level"
+        else:
+            return "Below Passing"
+
+    def get_category_performance(self, obj):
+        from django.db.models import Count, Q
+
+        performance = obj.exam_questions.values(
+            "question__category__id", "question__category__name"
+        ).annotate(total=Count("id"), correct=Count("id", filter=Q(is_correct=True)))
+
+        return [
+            {
+                "category_id": p["question__category__id"],
+                "category_name": p["question__category__name"],
+                "total_questions": p["total"],
+                "correct_answers": p["correct"],
+                "percentage": (
+                    round((p["correct"] / p["total"] * 100), 1) if p["total"] > 0 else 0
+                ),
+            }
+            for p in performance
+        ]

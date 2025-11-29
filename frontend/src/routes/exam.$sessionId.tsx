@@ -8,6 +8,7 @@ import QuestionCard from "../features/exam/components/QuestionCard";
 import MarkedQuestionsPanel from "../features/exam/components/MarkedQuestionsPanel";
 import type { ExamSession } from "../features/exam/types";
 import ExamSummaryPanel from "../features/exam/components/ExamSummaryPanel";
+import ErrorFallback from "../components/layouts/ErrorFallback";
 
 export const Route = createFileRoute("/exam/$sessionId")({
   loader: ({ context: { queryClient }, params: { sessionId } }) => {
@@ -20,24 +21,25 @@ export const Route = createFileRoute("/exam/$sessionId")({
       size="lg"
     />
   ),
+  errorComponent: ErrorFallback,
   component: ExamComponent,
 });
 
 function ExamComponent() {
   const data = Route.useLoaderData() as ExamSession;
   const initialize = useExamStore((s) => s.initialize);
+  const reset = useExamStore((s) => s.reset);
 
   useAutoSave();
 
   useEffect(() => {
+    reset();
     initialize(data);
-  }, [data, initialize]);
+  }, [data, initialize, reset]);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50 px-4">
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* {isSaving && <span>Saving...</span>}
-        {lastSaved && <span>Last saved: {lastSaved.toLocaleTimeString()}</span>} */}
         <ExamHeader />
         <ExamSummaryPanel />
         <MarkedQuestionsPanel />

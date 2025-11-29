@@ -4,6 +4,7 @@ import type { ExamStore } from "../types/examStoreType";
 import { toast } from "../../../utils";
 import type { Answer, ExamAction } from "../types";
 import { createInitialExamState, examActions, examReducer } from "../reducers";
+import { ExamPayloadBuilder } from "../utils";
 
 export const useExamStore = create<ExamStore>()(
   devtools(
@@ -22,12 +23,15 @@ export const useExamStore = create<ExamStore>()(
 
         initialize: (data) => {
           const { session, questions } = data;
+          if (!session || !session.session_id) {
+            throw new Error("Invalid session data");
+          }
 
           const answers = new Map<string, Answer>();
           const markedQuestions = new Set<string>();
 
           questions.forEach((q) => {
-            if (q.user_answer) {
+            if (q.first_viewed_at || q.user_answer) {
               answers.set(String(q.id), {
                 questionId: String(q.id),
                 selectedOptionId: q.user_answer,
@@ -183,15 +187,6 @@ export const useExamStore = create<ExamStore>()(
           get().dispatch(examActions.clearAnswer(String(currentQuestion.id)));
         },
 
-        submitExam: () => {
-          const { state } = get();
-          const timeSpent = state.isPaused
-            ? 0
-            : Math.floor((Date.now() - state.questionStartTime) / 1000);
-
-          get().dispatch(examActions.submitExam(timeSpent));
-        },
-
         updateQuestionCategory: (
           questionId: number,
           categoryId: number,
@@ -204,6 +199,53 @@ export const useExamStore = create<ExamStore>()(
                 : q
             ),
           })),
+
+        getPayloadBuilderInput: () => {
+          const { sessionId, state } = get();
+          return {
+            sessionId,
+            currentQuestionIndex: state.currentQuestionIndex,
+            totalTimeSpent: state.totalTimeSpent,
+            answers: state.answers,
+            markedQuestions: state.markedQuestions,
+            isPaused: state.isPaused,
+            questionStartTime: state.questionStartTime,
+          };
+        },
+
+        // NEW: Get auto-save payload
+        getExamProgressPayload: () => {
+          const input = get().getPayloadBuilderInput();
+          return ExamPayloadBuilder.buildExamProgressPayload(input);
+        },
+
+        // NEW: Get current snapshot
+        getCurrentSnapshot: () => {
+          const input = get().getPayloadBuilderInput();
+          return ExamPayloadBuilder.createSnapshot(input);
+        },
+
+        // NEW: Check if data has changed since last save
+        hasDataChanged: () => {
+          const currentSnapshot = get().getCurrentSnapshot();
+          const lastSnapshot = get().state.lastSavedSnapshot;
+          return currentSnapshot !== lastSnapshot;
+        },
+
+        // NEW: Update snapshot after successful save
+        updateSnapshot: () => {
+          const snapshot = get().getCurrentSnapshot();
+          get().dispatch({ type: "UPDATE_SNAPSHOT", snapshot });
+        },
+
+        reset: () => {
+          set({
+            state: createInitialExamState(), // ✅ Reset to initial null remainingTime
+            sessionId: "",
+            session: null,
+            questions: [],
+          });
+        },
       }),
       {
         name: "exam-storage",

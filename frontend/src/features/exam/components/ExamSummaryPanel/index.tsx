@@ -20,7 +20,8 @@ export default function ExamSummaryPanel() {
     total: questions.length,
     answered: answersArray.filter((a) => a.selectedOptionId).length,
     visited: answersArray.filter((a) => !a.selectedOptionId).length,
-    notVisited: questions.length - (answers instanceof Map ? answers.size : 0),
+    notVisited:
+      questions.length - (answers instanceof Map ? answers.size : 0) - 1,
     marked: markedQuestions instanceof Set ? markedQuestions.size : 0,
   };
   const answeredQuestions = questions
@@ -61,7 +62,10 @@ export default function ExamSummaryPanel() {
           onToggle={() => setShowSkipped(!showSkipped)}
         />
 
-        <StatCard type="notVisited" count={stats.notVisited} />
+        <StatCard
+          type="notVisited"
+          count={stats.notVisited > 0 ? stats.notVisited : 0}
+        />
 
         <StatCard type="marked" count={stats.marked} />
       </div>

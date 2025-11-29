@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
   component: HomeComponent,
 });
 
-function HomeComponent() {
+export function HomeComponent() {
   const page = useCheckActiveExam();
 
   return (

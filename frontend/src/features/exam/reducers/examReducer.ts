@@ -1,14 +1,17 @@
 import type { Answer, ExamAction, ExamState } from "../types";
-export const createInitialExamState = (): ExamState => ({
-  currentQuestionIndex: 0,
-  answers: new Map(),
-  markedQuestions: new Set(),
-  isPaused: false,
-  questionStartTime: Date.now(),
-  totalTimeSpent: 0,
-  remainingTime: 0,
-  pauseSource: null,
-});
+
+export const createInitialExamState = (): ExamState => {
+  return {
+    currentQuestionIndex: 0,
+    answers: new Map(),
+    markedQuestions: new Set(),
+    isPaused: false,
+    questionStartTime: Date.now(),
+    totalTimeSpent: 0,
+    remainingTime: -1,
+    pauseSource: null,
+  };
+};
 
 export function examReducer(state: ExamState, action: ExamAction): ExamState {
   switch (action.type) {
@@ -200,14 +203,6 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
       const newAnswers = new Map(state.answers);
       newAnswers.delete(action.questionId);
       return { ...state, answers: newAnswers };
-    }
-
-    case "SUBMIT_EXAM": {
-      return {
-        ...state,
-        totalTimeSpent: state.totalTimeSpent + action.finalTimeSpent,
-        isPaused: true,
-      };
     }
 
     case "DECREMENT_TIME": {

@@ -3,58 +3,66 @@ from api.models import Category, Question, ExamSession, ExamQuestion, SessionAct
 # ============================================
 # HELPER FUNCTIONS FOR CREATING EXAM SESSIONS
 # ============================================
+import random
+from api.constants import EPPPConfig
 
 
 def create_exam_session(browser_fingerprint=None):
     """
-    Creates a new exam session with 225 balanced questions
+        Creates a new exam session with 225 balanced questions
+    Distributes remainder evenly across all categories
     Returns: ExamSession instance
     """
-    from django.db.models import Count
-    import random
-
-    # Create the session
     session = ExamSession.objects.create(
         browser_fingerprint=browser_fingerprint, status="in_progress"
     )
 
     # Get all categories
-    categories = Category.objects.all()
-    num_categories = categories.count()
+    categories = list(Category.objects.all().order_by("id"))
+    num_categories = len(categories)
 
     if num_categories == 0:
         raise ValueError("No categories found. Please create categories first.")
 
-    # Calculate questions per category (225 / 9 = 25 per category)
-    questions_per_category = 225 // num_categories
-    remaining_questions = 225 % num_categories  # Handle remainder
+    # 225 / 9 = 25 per category, 0 remainder
+    # But if categories != 9, distribute remainder evenly
+    base_questions = EPPPConfig.TOTAL_QUESTIONS // num_categories
+    remainder = EPPPConfig.TOTAL_QUESTIONS % num_categories  # Handle remainder
+
+    # Calculate questions per category
+    # Distribute remainder one by one across ALL categories cyclically
+    questions_per_category = []
+    for i in range(num_categories):
+        count = base_questions
+        if i < remainder:  # First 'remainder' categories get +1
+            count += 1
+        questions_per_category.append(count)
 
     all_exam_questions = []
-    question_number = 1
 
-    # Get balanced questions from each category
-    for idx, category in enumerate(categories):
-        # Get number of questions for this category
-        num_questions = questions_per_category
-        if idx < remaining_questions:  # Distribute remainder across first categories
-            num_questions += 1
-
-        # Get random questions from this category
+    # Get questions from each category
+    for category, num_questions in zip(categories, questions_per_category):
         questions = list(
             Question.objects.filter(category=category, is_active=True).order_by("?")[
                 :num_questions
             ]
         )
 
-        # Create ExamQuestion instances
-        for question in questions:
-            exam_question = ExamQuestion(
-                session=session,
-                question=question,
-                question_number=question_number,
+        if len(questions) < num_questions:
+            raise ValueError(
+                f"Not enough questions in category '{category.name}'. "
+                f"Need {num_questions}, found {len(questions)}"
             )
-            all_exam_questions.append(exam_question)
-            question_number += 1
+
+        # Create ExamQuestion instances (without question_number yet)
+        for question in questions:
+            all_exam_questions.append(
+                ExamQuestion(
+                    session=session,
+                    question=question,
+                    question_number=0,  # Temporary, will reassign after shuffle
+                )
+            )
 
     # Shuffle the questions so categories aren't grouped together
     random.shuffle(all_exam_questions)

@@ -7,7 +7,6 @@ export interface Answer {
 }
 
 export interface ExamState {
-  pauseSource: "user" | "system" | null;
   currentQuestionIndex: number;
   answers: Map<string, Answer>;
   markedQuestions: Set<string>;
@@ -15,6 +14,8 @@ export interface ExamState {
   questionStartTime: number;
   totalTimeSpent: number;
   remainingTime: number;
+  pauseSource: "user" | "system" | null;
+  lastSavedSnapshot?: string | null;
 }
 
 export type ExamAction =
@@ -36,4 +37,5 @@ export type ExamAction =
     }
   | { type: "CLEAR_ANSWER"; questionId: string }
   | { type: "SUBMIT_EXAM"; finalTimeSpent: number }
-  | { type: "DECREMENT_TIME" };
+  | { type: "DECREMENT_TIME" }
+  | { type: "UPDATE_SNAPSHOT"; snapshot: string };

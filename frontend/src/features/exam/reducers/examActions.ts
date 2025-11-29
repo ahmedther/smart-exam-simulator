@@ -51,12 +51,12 @@ export const examActions = {
     questionId,
   }),
 
-  submitExam: (finalTimeSpent: number): ExamAction => ({
-    type: "SUBMIT_EXAM",
-    finalTimeSpent,
-  }),
-
   decrementTime: (): ExamAction => ({
     type: "DECREMENT_TIME",
+  }),
+  // NEW: Action for snapshot updates
+  updateSnapshot: (snapshot: string): ExamAction => ({
+    type: "UPDATE_SNAPSHOT",
+    snapshot,
   }),
 };

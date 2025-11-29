@@ -1,6 +1,7 @@
 from django.db import models
-from django.utils import timezone
 import uuid
+
+from api.constants import EPPPConfig
 
 
 class Category(models.Model):
@@ -114,7 +115,9 @@ class ExamSession(models.Model):
     total_time_spent = models.IntegerField(default=0)  # seconds
 
     # Exam duration (4.5 hours = 16200 seconds)
-    exam_duration = models.IntegerField(default=16200)  # 4.5 hours
+    exam_duration = models.IntegerField(
+        default=EPPPConfig.EXAM_DURATION_SECONDS
+    )  # 4.5 hours
 
     # Status
     STATUS_CHOICES = [
@@ -132,8 +135,11 @@ class ExamSession(models.Model):
     current_question_number = models.IntegerField(default=1)
 
     # Score (calculated after completion)
-    score = models.IntegerField(null=True, blank=True)
-    total_questions = models.IntegerField(default=225)
+    scaled_score = models.IntegerField(null=True, blank=True)
+    total_questions = models.IntegerField(default=EPPPConfig.TOTAL_QUESTIONS)
+    passing_score = models.IntegerField(
+        default=EPPPConfig.PASSING_SCORE
+    )  # ASPPB recommended
     correct_answers = models.IntegerField(default=0)
 
     class Meta:
@@ -141,12 +147,6 @@ class ExamSession(models.Model):
 
     def __str__(self):
         return f"Session {self.session_id} - {self.status}"
-
-    def calculate_score(self):
-        """Calculate the final score as percentage"""
-        if self.total_questions > 0:
-            self.score = int((self.correct_answers / self.total_questions) * 100)
-        return self.score
 
     def is_expired(self):
         """Check if exam time has expired"""
@@ -158,6 +158,53 @@ class ExamSession(models.Model):
     def remaining_time(self):
         """Get remaining time in seconds"""
         return max(0, self.exam_duration - self.total_time_spent)
+
+    def calculate_score(self):
+        """
+        Calculate EPPP-style scaled score (200-800)
+
+        Real EPPP: 175 scored questions out of 225 total
+        50 are unscored pretest questions (randomly distributed)
+
+        For practice purposes, we score all 225 questions
+        """
+        self.correct_answers = self.exam_questions.filter(is_correct=True).count()
+
+        # Calculate percentage based on all 225 questions
+        raw_percentage = (self.correct_answers / self.total_questions) * 100
+
+        # EPPP scaling approximation:
+        # ~70% correct ≈ 500 (passing for independent practice)
+        # ~65% correct ≈ 450 (passing for supervised practice)
+        # ~80% correct ≈ 600
+
+        if raw_percentage >= 70:
+            # Above passing: 70%-100% → 500-800
+            self.scaled_score = int(500 + ((raw_percentage - 70) / 30 * 300))
+        else:
+            # Below passing: 0%-70% → 200-500
+            self.scaled_score = int(200 + (raw_percentage / 70 * 300))
+
+        # Clamp to valid range
+        self.scaled_score = max(200, min(800, self.scaled_score))
+
+        return self.scaled_score
+
+    @property
+    def percentage(self):
+        """Raw percentage correct"""
+        return round((self.correct_answers / self.total_questions) * 100, 1)
+
+    @property
+    def passed(self):
+        """Check if passed (default 500)"""
+        return self.scaled_score >= self.passing_score if self.scaled_score else False
+
+    @property
+    def average_time_per_question(self):
+        """Average seconds per question"""
+        answered = self.exam_questions.exclude(answered_at__isnull=True).count()
+        return round(self.total_time_spent / answered, 1) if answered > 0 else 0
 
 
 class ExamQuestion(models.Model):
@@ -218,10 +265,6 @@ class ExamQuestion(models.Model):
             self.is_correct = self.user_answer == self.question.correct_answer
             return self.is_correct
         return None
-
-    def get_final_category(self):
-        """Get the final category (user corrected or assumed)"""
-        return self.question.category
 
 
 class SessionActivity(models.Model):

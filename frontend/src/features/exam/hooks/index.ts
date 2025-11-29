@@ -4,5 +4,6 @@ export * from "./useChangeCategory";
 export * from "./useCheckActiveSession";
 export * from "./useClickOutside";
 export * from "./useExamSession";
+export * from "./useNavigationButtons";
 export * from "./useQuestionCardRefs";
 export * from "./useStartExam";

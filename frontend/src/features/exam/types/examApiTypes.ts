@@ -47,7 +47,7 @@ export interface AutoSaveInput {
   markedQuestions: Set<string>;
 }
 
-export interface AutoSavePayload {
+export interface ExamProgressPayload {
   total_time_spent: number;
   current_question_number: number;
   answers: Array<{

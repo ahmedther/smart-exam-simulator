@@ -9,6 +9,7 @@ interface ConfirmModalProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
+  variant?: "danger" | "success" | "primary";
 }
 
 export default function ConfirmModal({
@@ -19,9 +20,19 @@ export default function ConfirmModal({
   message,
   confirmText = "Continue",
   cancelText = "Cancel",
+  variant = "primary",
 }: ConfirmModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+
+  const variantStyles = {
+    danger:
+      "bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 focus:ring-red-500",
+    success:
+      "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:ring-green-500",
+    primary:
+      "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:ring-purple-500",
+  };
 
   // Handle escape key
   useEffect(() => {
@@ -140,7 +151,7 @@ export default function ConfirmModal({
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <button
             onClick={onCancel}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full text-lg font-semibold bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 hover:shadow-lg hover:scale-105 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full text-lg font-semibold whitespace-nowrap  bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 hover:shadow-lg hover:scale-105 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             <svg
               className="w-5 h-5"
@@ -160,7 +171,7 @@ export default function ConfirmModal({
 
           <button
             onClick={onConfirm}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full text-lg font-semibold bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl hover:scale-105 hover:from-indigo-700 hover:to-purple-700 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+            className={`flex-1 inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full text-lg whitespace-nowrap font-semibold ${variantStyles[variant]} text-white hover:shadow-xl hover:scale-105  transform transition-all duration-200 focus:outline-none focus:ring-2  focus:ring-offset-2`}
           >
             <span>{confirmText}</span>
             <svg

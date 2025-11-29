@@ -1,3 +1,4 @@
+import type { ExamProgressPayload } from "./examApiTypes";
 import type { Answer, ExamAction, ExamState } from "./examStateTypes";
 
 interface Question {
@@ -15,6 +16,7 @@ interface Question {
   time_spent: number;
   marked_for_review: boolean;
   answered_at: string | null;
+  first_viewed_at: string | null;
 }
 
 interface Session {
@@ -37,7 +39,6 @@ interface ExamSession {
 }
 
 interface ExamStore {
-  decrementTime: () => void;
   // Core state
   state: ExamState;
   sessionId: string;
@@ -55,14 +56,7 @@ interface ExamStore {
   getCurrentAnswer: () => Answer | undefined;
   isCurrentMarked: () => boolean;
 
-  updateQuestionCategory: (
-    questionId: number,
-    categoryId: number,
-    categoryName: string
-  ) => void;
-
-  // Helper to update statistics
-  // High-level actions (these use the reducer internally)
+  // High-level actions
   selectAnswer: (optionId: string) => void;
   nextQuestion: () => void;
   previousQuestion: () => void;
@@ -72,7 +66,27 @@ interface ExamStore {
   resumeFromActivity: () => void;
   goToQuestion: (index: number) => void;
   clearAnswer: () => void;
-  submitExam: () => void;
-}
+  decrementTime: () => void;
+  updateQuestionCategory: (
+    questionId: number,
+    categoryId: number,
+    categoryName: string
+  ) => void;
 
+  // Payload builder methods (used by hooks)
+  getPayloadBuilderInput: () => {
+    sessionId: string;
+    currentQuestionIndex: number;
+    totalTimeSpent: number;
+    answers: Map<string, Answer>;
+    markedQuestions: Set<string>;
+    isPaused: boolean;
+    questionStartTime: number;
+  };
+  getExamProgressPayload: () => ExamProgressPayload;
+  getCurrentSnapshot: () => string;
+  hasDataChanged: () => boolean;
+  updateSnapshot: () => void;
+  reset: () => void;
+}
 export type { ExamStore, Question, Session, ExamSession };

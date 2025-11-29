@@ -2,6 +2,7 @@ import type {
   Category,
   ChangeCategoryResponse,
   CheckActiveSessionResponse,
+  ExamProgressPayload,
   ExamSession,
   PaginatedResponse,
 } from "../features/exam/types";
@@ -96,31 +97,18 @@ export const examApi = {
     });
   },
 
-  // Auto-save progress
-  autoSave: async (
-    sessionId: string,
-    data: {
-      total_time_spent: number;
-      current_question_number: number;
-      answers: Array<{
-        question_id: string;
-        user_answer: string | null;
-        time_spent: number;
-        marked_for_review: boolean;
-      }>;
-    }
-  ) => {
+  autoSave: async (sessionId: string, payload: ExamProgressPayload) => {
     return apiFetch(`/exam-sessions/${sessionId}/autosave/`, {
       method: "PATCH",
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
   },
 
   // Submit exam
-  submitExam: async (sessionId: string, totalTimeSpent: number) => {
+  submitExam: async (sessionId: string, payload: ExamProgressPayload) => {
     return apiFetch(`/exam-sessions/${sessionId}/submit/`, {
       method: "POST",
-      body: JSON.stringify({ total_time_spent: totalTimeSpent }),
+      body: JSON.stringify(payload),
     });
   },
 

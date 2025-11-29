@@ -3,19 +3,16 @@ import { useExamStore } from "../stores/examStore";
 import TimeUpCard from "./TimeUpCard";
 
 const TimerDisplay = memo(() => {
-  // ✅ 1. Hooks MUST be at top
   const remainingTime = useExamStore((s) => s.state.remainingTime);
   const isPaused = useExamStore((s) => s.state.isPaused);
   const decrementTime = useExamStore((s) => s.decrementTime);
 
-  // ✅ 2. Timer logic OUTSIDE memo component (move to ExamHeader or custom hook)
   useEffect(() => {
     if (isPaused || remainingTime <= 0) return;
     const intervalId = setInterval(decrementTime, 1000);
     return () => clearInterval(intervalId);
   }, [isPaused, remainingTime, decrementTime]);
 
-  // ✅ 3. Remove useMemo (overkill for simple checks)
   const isLowTime = remainingTime <= 300 && remainingTime > 0;
 
   const formatTime = (seconds: number) => {
@@ -27,7 +24,12 @@ const TimerDisplay = memo(() => {
       .padStart(2, "0")}`;
   };
 
-  if (remainingTime <= 0) return <TimeUpCard />;
+  // ✅ CHANGED: Only show TimeUpCard if > 0 AND remainingTime actually became 0
+  // Not on initial render when remainingTime is 0
+  if (remainingTime === null || remainingTime === undefined) return null;
+
+  if (remainingTime === 0) return <TimeUpCard />;
+
   return (
     <div className="flex flex-col items-center">
       <span className="text-sm text-gray-500 mb-2">Exam Time Remaining</span>
