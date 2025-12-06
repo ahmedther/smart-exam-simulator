@@ -159,8 +159,8 @@ export default function ResultReport() {
   const { results, report } = MOCK_DATA;
 
   const bgClass = isDark
-    ? "min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
-    : "min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50";
+    ? "min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900"
+    : "min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50";
 
   const cardClass = isDark
     ? "bg-slate-700/40 border border-slate-600/50 rounded-xl p-6"
@@ -232,7 +232,7 @@ export default function ResultReport() {
             <p className={`text-sm ${textSecondaryClass} mb-2`}>Scaled Score</p>
             <div className="flex items-baseline gap-2">
               <span
-                className={`text-4xl font-bold bg-gradient-to-r ${getAccuracyColor(
+                className={`text-4xl font-bold bg-linear-to-r ${getAccuracyColor(
                   results.percentage
                 )} bg-clip-text text-transparent`}
               >
@@ -334,7 +334,7 @@ export default function ResultReport() {
                 </div>
                 <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden mb-3">
                   <div
-                    className={`h-full bg-gradient-to-r ${getAccuracyColor(
+                    className={`h-full bg-linear-to-r ${getAccuracyColor(
                       cat.accuracy
                     )}`}
                     style={{ width: `${cat.accuracy}%` }}

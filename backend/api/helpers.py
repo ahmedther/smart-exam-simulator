@@ -80,6 +80,42 @@ def create_exam_session(browser_fingerprint=None):
     return session
 
 
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from collections import OrderedDict
+
+# ============================================
+# HELPER FUNCTIONS FOR Serializing Paginated Results
+# ============================================
+
+
+class ResultsPagination(PageNumberPagination):
+    """Custom pagination for TanStack Router/Query"""
+
+    page_size = 6
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        """Returns page numbers instead of URLs"""
+        return Response(
+            OrderedDict(
+                [
+                    ("count", self.page.paginator.count),
+                    ("total_pages", self.page.paginator.num_pages),
+                    ("current_page", self.page.number),
+                    ("page_size", self.page_size),
+                    ("has_next", self.page.has_next()),
+                    ("has_previous", self.page.has_previous()),
+                    ("results", data),
+                ]
+            )
+        )
+
+
+# You can add other helper functions here too
+
+
 """
 USAGE EXAMPLES:
 

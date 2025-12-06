@@ -6,6 +6,7 @@ import type {
   ExamSession,
   PaginatedResponse,
 } from "../features/exam/types";
+import type { PaginatedResultsTypes } from "../features/results/types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -115,5 +116,20 @@ export const examApi = {
   // Get categories
   getCategories: async () => {
     return apiFetch<PaginatedResponse<Category>>("/categories/");
+  },
+
+  fetchAllResults: async (params: {
+    page: number;
+    search?: string;
+    sort?: string;
+  }): Promise<PaginatedResultsTypes> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("page", params.page.toString());
+    if (params.search) queryParams.append("search", params.search);
+    if (params.sort) queryParams.append("sort", params.sort);
+
+    return apiFetch<PaginatedResultsTypes>(
+      `/results/?${queryParams.toString()}`
+    );
   },
 };

@@ -3,89 +3,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.utils import timezone
-import json
 from django.db import transaction
-from .models import (
-    Category,
-    Question,
-    ExamSession,
-    ExamQuestion,
-    SessionActivity,
-)
-from .serializers import (
-    CategorySerializer,
-    ExamSessionSerializer,
-    ExamQuestionSerializer,
-    ExamResultsSerializer,
-)
+import json
+from api.models import ExamSession, ExamQuestion, SessionActivity
+from api.serializers import ExamSessionSerializer, ExamQuestionSerializer
 from api.helpers import create_exam_session
-from api.analytics import ExamAnalyticsBuilder
-
-
-class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    API endpoint for categories
-    GET /api/categories/ - List all categories
-    GET /api/categories/{id}/ - Get category details
-    """
-
-    queryset = Category.objects.all().order_by("id")
-    serializer_class = CategorySerializer
-    permission_classes = [AllowAny]
-
-
-class QuestionViewSet(viewsets.ModelViewSet):
-    @action(
-        detail=False,
-        methods=["patch"],
-        url_path="update-category",
-        permission_classes=[AllowAny],
-    )
-    def update_category(self, request):
-        """
-        PATCH /api/questions/update-category/
-        Update a question's category based on question text
-        """
-        question_id = request.data.get("question_id")
-        new_category_id = request.data.get("new_category_id")
-
-        if not question_id or not new_category_id:
-            return Response(
-                {"error": "question_id and new_category_id are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            # Get question by unique text
-            question = Question.objects.get(id=question_id)
-
-            # Validate category exists
-            try:
-                new_category = Category.objects.get(id=new_category_id)
-            except Category.DoesNotExist:
-                return Response(
-                    {"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND
-                )
-
-            # Update category
-            old_category = question.category.name
-            question.category = new_category
-            question.save()
-
-            return Response(
-                {
-                    "message": "Category updated successfully",
-                    "question_id": question.id,
-                    "old_category": old_category,
-                    "new_category": new_category.name,
-                    "new_category_id": new_category.id,
-                }
-            )
-
-        except Question.DoesNotExist:
-            return Response(
-                {"error": "Question not found"}, status=status.HTTP_404_NOT_FOUND
-            )
 
 
 class ExamSessionViewSet(viewsets.ModelViewSet):
@@ -415,24 +337,3 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
             )
 
         return Response({"has_active_session": False})
-
-
-"""
-===========================================
-API ENDPOINTS CREATED:
-===========================================
-
-CATEGORIES:
-- GET    /api/categories/                          - List all categories
-- GET    /api/categories/{id}/                     - Get category details
-
-EXAM SESSIONS:
-- POST   /api/exam-sessions/start/                 - Start new exam (creates 225 questions)
-- POST   /api/exam-sessions/check-active/          - Check for active session
-- GET    /api/exam-sessions/{session_id}/          - Get session details
-- GET    /api/exam-sessions/{session_id}/resume/   - Resume existing session
-- PATCH  /api/exam-sessions/{session_id}/pause/    - Pause session
-- PATCH  /api/exam-sessions/{session_id}/autosave/ - Auto-save progress
-- POST   /api/exam-sessions/{session_id}/submit/   - Submit and complete exam
-
-"""

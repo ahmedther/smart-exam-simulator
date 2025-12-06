@@ -10,6 +10,7 @@ export const createInitialExamState = (): ExamState => {
     totalTimeSpent: 0,
     remainingTime: -1,
     pauseSource: null,
+    lastSavedSnapshot: undefined,
   };
 };
 
@@ -211,6 +212,13 @@ export function examReducer(state: ExamState, action: ExamAction): ExamState {
         ...state,
         remainingTime: newTime,
         isPaused: newTime === 0 ? true : state.isPaused,
+      };
+    }
+
+    case "UPDATE_SNAPSHOT": {
+      return {
+        ...state,
+        lastSavedSnapshot: action.snapshot,
       };
     }
 

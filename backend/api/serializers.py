@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from api.models import Category, Question, ExamSession, ExamQuestion, SessionActivity
+from api.models import Category, Question, ExamSession, ExamQuestion
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import serializers
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -142,15 +144,90 @@ class ExamSessionSerializer(serializers.ModelSerializer):
         return obj.remaining_time()
 
 
-class ExamResultsSerializer(serializers.ModelSerializer):
-    """EPPP-style results display"""
+class ExamResultsListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for overview cards"""
 
-    scaled_score = serializers.IntegerField()
-    percentage = serializers.FloatField()
-    passed = serializers.BooleanField()
-    average_time_per_question = serializers.FloatField()
+    # ✅ For @property fields - just use ReadOnlyField with no source
+    performance_level = serializers.SerializerMethodField()
+    accuracy = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    passing_score = serializers.ReadOnlyField()
+    passed = serializers.ReadOnlyField()
+    percentage = serializers.ReadOnlyField()
+    average_time = serializers.ReadOnlyField(
+        source="average_time_per_question"
+    )  # ✅ Different name, needs source
+    date = serializers.SerializerMethodField()
+    total_time = serializers.SerializerMethodField()
+    questions_summary = serializers.SerializerMethodField()
+    total_questions = serializers.ReadOnlyField()
+
+    class Meta:
+        model = ExamSession
+        fields = [
+            "session_id",
+            "scaled_score",
+            "performance_level",
+            "accuracy",
+            "status",
+            "date",
+            "total_time",
+            "questions_summary",
+            "total_questions",
+            "average_time",
+            "passing_score",
+            "passed",
+            "percentage",
+        ]
+
+    def get_accuracy(self, obj):
+        if obj.total_questions > 0:
+            return round((obj.correct_answers / obj.total_questions * 100), 1)
+        return 0.0
+
+    def get_status(self, obj):
+        return "Passed" if obj.passed else "Failed"
+
+    def get_total_time(self, obj):
+        """Format total time as '2h 15m' or '45m'"""
+        seconds = obj.total_time_spent
+        if seconds == 0:
+            return "0m"
+        h = seconds // 3600
+        m = (seconds % 3600) // 60
+        if h > 0:
+            return f"{h}h {m}m"
+        return f"{m}m"
+
+    def get_date(self, obj):
+        return obj.completed_at.date() if obj.completed_at else None
+
+    def get_questions_summary(self, obj):
+        return f"{obj.correct_answers}/{obj.total_questions}"
+
+    def get_performance_level(self, obj):
+        score = obj.scaled_score or 0
+        if score >= 700:
+            return "Excellent"
+        elif score >= 600:
+            return "Very Good"
+        elif score >= 500:
+            return "Pass"
+        elif score >= 450:
+            return "Supervised Practice Level"
+        return "Below Passing"
+
+
+class ExamResultsDetailSerializer(serializers.ModelSerializer):
+    """Full serializer with nested data"""
+
     performance_level = serializers.SerializerMethodField()
     category_performance = serializers.SerializerMethodField()
+    accuracy = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    passed = serializers.SerializerMethodField()
+    percentage = serializers.SerializerMethodField()
+    average_time_per_question = serializers.SerializerMethodField()
 
     class Meta:
         model = ExamSession
@@ -160,21 +237,18 @@ class ExamResultsSerializer(serializers.ModelSerializer):
             "total_time_spent",
             "total_questions",
             "correct_answers",
-            "scaled_score",  # 200-800
-            "percentage",  # Raw %
-            "passing_score",  # Usually 500
+            "scaled_score",
+            "percentage",
+            "passing_score",
             "passed",
-            "performance_level",  # Descriptive text
+            "status",
+            "performance_level",
             "average_time_per_question",
             "category_performance",
         ]
 
     def get_performance_level(self, obj):
-        """Descriptive performance level"""
-        if not obj.scaled_score:
-            return None
-
-        score = obj.scaled_score
+        score = obj.scaled_score or 0
         if score >= 700:
             return "Excellent"
         elif score >= 600:
@@ -183,24 +257,50 @@ class ExamResultsSerializer(serializers.ModelSerializer):
             return "Pass"
         elif score >= 450:
             return "Supervised Practice Level"
-        else:
-            return "Below Passing"
+        return "Below Passing"
+
+    def get_accuracy(self, obj):
+        return obj.percentage
+
+    def get_status(self, obj):
+        return "Passed" if obj.passed else "Failed"
+
+    def get_passed(self, obj):
+        """Access the @property directly"""
+        return obj.passed
+
+    def get_percentage(self, obj):
+        """Access the @property directly"""
+        return obj.percentage
+
+    def get_average_time_per_question(self, obj):
+        """Access the @property directly"""
+        return obj.average_time_per_question
 
     def get_category_performance(self, obj):
+        """Category breakdown with accuracy"""
         from django.db.models import Count, Q
 
         performance = obj.exam_questions.values(
             "question__category__id", "question__category__name"
-        ).annotate(total=Count("id"), correct=Count("id", filter=Q(is_correct=True)))
+        ).annotate(
+            total_questions=Count("id"),
+            correct_answers=Count("id", filter=Q(is_correct=True)),
+        )
 
         return [
             {
                 "category_id": p["question__category__id"],
                 "category_name": p["question__category__name"],
-                "total_questions": p["total"],
-                "correct_answers": p["correct"],
-                "percentage": (
-                    round((p["correct"] / p["total"] * 100), 1) if p["total"] > 0 else 0
+                "total_questions": p["total_questions"],
+                "correct_answers": p["correct_answers"],
+                "percentage": round(
+                    (
+                        (p["correct_answers"] / p["total_questions"] * 100)
+                        if p["total_questions"] > 0
+                        else 0.0
+                    ),
+                    1,
                 ),
             }
             for p in performance

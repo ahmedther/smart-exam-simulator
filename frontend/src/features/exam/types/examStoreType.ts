@@ -77,11 +77,10 @@ interface ExamStore {
   getPayloadBuilderInput: () => {
     sessionId: string;
     currentQuestionIndex: number;
-    totalTimeSpent: number;
     answers: Map<string, Answer>;
     markedQuestions: Set<string>;
-    isPaused: boolean;
-    questionStartTime: number;
+    remainingTime: number;
+    examDuration: number;
   };
   getExamProgressPayload: () => ExamProgressPayload;
   getCurrentSnapshot: () => string;

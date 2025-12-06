@@ -26,14 +26,14 @@ export default function Button({
 
   const variantClasses = {
     primary:
-      "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl hover:scale-105 hover:from-indigo-700 hover:to-purple-700",
+      "bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl hover:scale-105 hover:from-indigo-700 hover:to-purple-700",
     secondary:
       "bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 hover:shadow-lg hover:scale-105",
   };
 
   const skeletonClasses = {
     primary:
-      "bg-gradient-to-r from-gray-300 to-gray-400 text-transparent animate-pulse cursor-wait",
+      "bg-linear-to-r from-gray-300 to-gray-400 text-transparent animate-pulse cursor-wait",
     secondary:
       "bg-gray-100 border-2 border-gray-300 text-transparent animate-pulse cursor-wait",
   };

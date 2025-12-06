@@ -201,15 +201,14 @@ export const useExamStore = create<ExamStore>()(
           })),
 
         getPayloadBuilderInput: () => {
-          const { sessionId, state } = get();
+          const { sessionId, state, session } = get();
           return {
             sessionId,
             currentQuestionIndex: state.currentQuestionIndex,
-            totalTimeSpent: state.totalTimeSpent,
+            remainingTime: state.remainingTime,
+            examDuration: session?.exam_duration ?? 0,
             answers: state.answers,
             markedQuestions: state.markedQuestions,
-            isPaused: state.isPaused,
-            questionStartTime: state.questionStartTime,
           };
         },
 

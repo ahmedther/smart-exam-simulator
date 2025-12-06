@@ -1,33 +1,23 @@
 import type { Answer, ExamProgressPayload } from "../types";
 
-export interface PayloadBuilderInput {
+export type PayloadBuilderInput = {
   sessionId: string;
   currentQuestionIndex: number;
-  totalTimeSpent: number;
+  remainingTime: number;
+  examDuration: number;
   answers: Map<string, Answer>;
   markedQuestions: Set<string>;
-  isPaused: boolean;
-  questionStartTime: number;
-}
+};
 
 export class ExamPayloadBuilder {
-  private static calculateAdditionalTime(
-    isPaused: boolean,
-    questionStartTime: number
-  ): number {
-    return isPaused ? 0 : Math.floor((Date.now() - questionStartTime) / 1000);
-  }
-
   static buildExamProgressPayload(
     input: PayloadBuilderInput
   ): ExamProgressPayload {
-    const additionalTime = this.calculateAdditionalTime(
-      input.isPaused,
-      input.questionStartTime
-    );
+    // ✅ Calculate from countdown - simple and accurate
+    const totalTimeSpent = input.examDuration - input.remainingTime;
 
     return {
-      total_time_spent: input.totalTimeSpent + additionalTime,
+      total_time_spent: totalTimeSpent,
       current_question_number: input.currentQuestionIndex + 1,
       answers: Array.from(input.answers.entries()).map(([qId, ans]) => ({
         question_id: qId,
