@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from django.db.models import Q
+from django.db.models import Q, Count, F
 from api.models import ExamSession
 from api.serializers import (
     ExamResultsListSerializer,
@@ -75,9 +75,51 @@ class ResultsViewSet(viewsets.ReadOnlyModelViewSet):
         GET /api/results/?search=abc123
         GET /api/results/?sort=-score
 
-        Returns paginated list of completed exam results
+        Returns paginated list of completed exam results WITH global stats
         """
-        return super().list(request, *args, **kwargs)
+        # Get the base queryset BEFORE pagination (for accurate stats)
+        base_queryset = self.get_queryset()
+
+        # Calculate stats on the FULL filtered queryset (not just current page)
+        stats = base_queryset.aggregate(
+            total_exams=Count("session_id"),
+            passed=Count("session_id", filter=Q(scaled_score__gte=F("passing_score"))),
+            failed=Count("session_id", filter=Q(scaled_score__lt=F("passing_score"))),
+        )
+
+        # Calculate average pass rate
+        total = stats["total_exams"]
+        passed = stats["passed"]
+        pass_rate = round((passed / total * 100), 1) if total > 0 else 0.0
+
+        # Now paginate the results
+        page = self.paginate_queryset(base_queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            response = self.get_paginated_response(serializer.data)
+
+            # Add stats to the paginated response
+            response.data["stats"] = {
+                "passed": stats["passed"],
+                "failed": stats["failed"],
+                "pass_rate": pass_rate,
+            }
+
+            return response
+
+        # Fallback if pagination is disabled
+        serializer = self.get_serializer(base_queryset, many=True)
+        return Response(
+            {
+                "results": serializer.data,
+                "stats": {
+                    "passed": stats["passed"],
+                    "failed": stats["failed"],
+                    "pass_rate": pass_rate,
+                },
+            }
+        )
 
     def retrieve(self, request, *args, **kwargs):
         """

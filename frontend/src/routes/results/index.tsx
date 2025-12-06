@@ -11,6 +11,7 @@ import {
 } from "../../features/results/components";
 import type { ResultsSearchTypes } from "../../features/results/types";
 import ResultCard from "../../features/results/components/landing/ResultCard";
+import { ResultsCount } from "../../features/results/components/landing/ResultsCount";
 
 export const Route = createFileRoute("/results/")({
   component: ResultsLanding,
@@ -40,6 +41,8 @@ export default function ResultsLanding() {
   const navigate = useNavigate({ from: Route.fullPath });
   const search = Route.useSearch();
   const { data } = useSuspenseQuery(resultsQueryOptions(search));
+
+  console.log(data);
 
   // Use the custom hook for UI logic
   const { isDark, setIsDark, getScoreColor, getPerformanceBadge, classes } =
@@ -113,15 +116,19 @@ export default function ResultsLanding() {
             isPreDisabled={!data.has_previous}
             isNextDisabled={!data.has_next}
             classes={classes}
-            total_pages={data.total_pages}
+            totalPages={data.total_pages}
           />
         )}
 
         {/* Results Count */}
         <div className="text-center mt-6">
-          <p className={isDark ? "text-slate-400" : "text-gray-600"}>
-            Showing {data.results.length} of {data.count} results
-          </p>
+          <ResultsCount
+            isDark={isDark}
+            startItem={(data.current_page - 1) * data.page_size + 1}
+            endItem={Math.min(data.current_page * data.page_size, data.count)}
+            totalResults={data.count}
+            stats={data.stats}
+          />
         </div>
       </div>
     </div>

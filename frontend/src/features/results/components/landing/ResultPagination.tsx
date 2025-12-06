@@ -13,7 +13,7 @@ type Props = {
   isPreDisabled: boolean;
   isNextDisabled: boolean;
   classes: ThemeClassesTypes;
-  total_pages: number;
+  totalPages: number;
 };
 
 /**
@@ -33,7 +33,7 @@ export function ResultPagination({
   isPreDisabled,
   isNextDisabled,
   classes,
-  total_pages,
+  totalPages,
 }: Props) {
   /**
    * Generates smart page numbers with ellipsis
@@ -54,14 +54,14 @@ export function ResultPagination({
 
     // Add pages around current page
     for (let i = current_page - delta; i <= current_page + delta; i++) {
-      if (i > 1 && i < total_pages) {
+      if (i > 1 && i < totalPages) {
         range.push(i);
       }
     }
 
     // Always include last page (if more than 1 page exists)
-    if (total_pages > 1) {
-      range.push(total_pages);
+    if (totalPages > 1) {
+      range.push(totalPages);
     }
 
     // Build final array with ellipsis
@@ -156,7 +156,7 @@ export function ResultPagination({
 
       {/* Last Page Button */}
       <button
-        onClick={() => handlePageChange(total_pages)}
+        onClick={() => handlePageChange(totalPages)}
         disabled={isNextDisabled}
         className={`${classes.pagination} transition-all`}
         title="Last page"

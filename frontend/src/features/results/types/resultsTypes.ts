@@ -14,6 +14,12 @@ type ExamResultTypes = {
   total_questions: number;
 };
 
+type ResultsStatsTypes = {
+  passed: number;
+  failed: number;
+  pass_rate: number;
+};
+
 type PaginatedResultsTypes = {
   count: number;
   total_pages: number;
@@ -22,6 +28,7 @@ type PaginatedResultsTypes = {
   has_next: boolean;
   has_previous: boolean;
   results: ExamResultTypes[];
+  stats: ResultsStatsTypes;
 };
 
 type ResultsSearchTypes = {
@@ -49,6 +56,7 @@ type ThemeClassesTypes = {
 export type {
   PaginatedResultsTypes,
   ExamResultTypes,
+  ResultsStatsTypes,
   ResultsSearchTypes,
   ThemeClassesTypes,
 };
