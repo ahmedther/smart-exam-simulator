@@ -21,7 +21,7 @@ type Props = {
   result: ExamResultTypes;
   classes: ThemeClassesTypes;
   colors: ColorType;
-  getPerformanceBadge: (level: string) => string;
+  performanceBadge: (level: string) => string;
 };
 
 export default function ResultCard({
@@ -29,7 +29,7 @@ export default function ResultCard({
   classes,
   isDark,
   colors,
-  getPerformanceBadge,
+  performanceBadge,
 }: Props) {
   const gradientClass = typeof colors === "string" ? colors : colors.bg;
 
@@ -76,7 +76,7 @@ export default function ResultCard({
           <div
             className={`px-3 py-1 ${
               isDark ? "rounded-full" : "rounded-lg"
-            } text-xs font-semibold ${getPerformanceBadge(
+            } text-xs font-semibold ${performanceBadge(
               result.performance_level
             )}`}
           >

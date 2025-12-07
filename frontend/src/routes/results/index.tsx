@@ -1,9 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import {
-  resultsQueryOptions,
-  useAllResults,
-} from "../../features/results/hooks";
+import { useResultsTheme } from "../../features/results/hooks";
 import {
   ResultPagination,
   ResultsHeader,
@@ -12,6 +9,11 @@ import {
 import type { ResultsSearchTypes } from "../../features/results/types";
 import ResultCard from "../../features/results/components/landing/ResultCard";
 import { ResultsCount } from "../../features/results/components/landing/ResultsCount";
+import {
+  getPerformanceBadge,
+  getScoreColor,
+} from "../../features/results/theme";
+import { resultsQueryOptions } from "../../features/results/config/resultQuery.config";
 
 export const Route = createFileRoute("/results/")({
   component: ResultsLanding,
@@ -42,11 +44,8 @@ export default function ResultsLanding() {
   const search = Route.useSearch();
   const { data } = useSuspenseQuery(resultsQueryOptions(search));
 
-  console.log(data);
-
   // Use the custom hook for UI logic
-  const { isDark, setIsDark, getScoreColor, getPerformanceBadge, classes } =
-    useAllResults();
+  const { isDark, toggleTheme, classes } = useResultsTheme();
 
   // Navigation handlers
   const handlePageChange = (newPage: number) => {
@@ -68,7 +67,7 @@ export default function ResultsLanding() {
         <ResultsHeader
           classes={classes}
           isDark={isDark}
-          setIsDark={setIsDark}
+          setIsDark={toggleTheme}
         />
         {/* Search & Sort */}
         <ResultsSearch
@@ -83,7 +82,7 @@ export default function ResultsLanding() {
         {data.results.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {data.results.map((result) => {
-              const colors = getScoreColor(result.scaled_score);
+              const colors = getScoreColor(result.scaled_score, isDark);
               return (
                 <ResultCard
                   key={result.session_id}
@@ -91,7 +90,9 @@ export default function ResultsLanding() {
                   classes={classes}
                   isDark={isDark}
                   colors={colors}
-                  getPerformanceBadge={getPerformanceBadge}
+                  performanceBadge={(level: string) =>
+                    getPerformanceBadge(level, isDark)
+                  }
                 />
               );
             })}
