@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from api.models import Category, Question, ExamSession, ExamQuestion
-from rest_framework.pagination import PageNumberPagination
 from rest_framework import serializers
+from django.db.models import Count, Q, Sum
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -218,36 +218,97 @@ class ExamResultsListSerializer(serializers.ModelSerializer):
         return "Below Passing"
 
 
-class ExamResultsDetailSerializer(serializers.ModelSerializer):
-    """Full serializer with nested data"""
+class QuestionReviewSerializer(serializers.ModelSerializer):
+    """Serializer for individual question review"""
 
+    question_text = serializers.CharField(
+        source="question.question_text", read_only=True
+    )
+    category = serializers.CharField(source="question.category.name", read_only=True)
+    choice_a = serializers.CharField(source="question.choice_a", read_only=True)
+    choice_b = serializers.CharField(source="question.choice_b", read_only=True)
+    choice_c = serializers.CharField(source="question.choice_c", read_only=True)
+    choice_d = serializers.CharField(source="question.choice_d", read_only=True)
+    correct_answer = serializers.CharField(
+        source="question.correct_answer", read_only=True
+    )
+    explanation = serializers.CharField(source="question.explanation", read_only=True)
+
+    class Meta:
+        model = ExamQuestion
+        fields = [
+            "question_number",
+            "question_text",
+            "category",
+            "choice_a",
+            "choice_b",
+            "choice_c",
+            "choice_d",
+            "user_answer",
+            "correct_answer",
+            "is_correct",
+            "explanation",
+            "time_spent",
+        ]
+
+
+class ExamResultsDetailSerializer(serializers.ModelSerializer):
+    """
+    Comprehensive exam results serializer with all analytics
+    Matches frontend requirements from old.tsx
+    """
+
+    # Basic metrics (from @property)
+    percentage = serializers.ReadOnlyField()
+    passed = serializers.ReadOnlyField()
+    average_time_per_question = serializers.ReadOnlyField()
+
+    # Computed fields
     performance_level = serializers.SerializerMethodField()
-    category_performance = serializers.SerializerMethodField()
-    accuracy = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
-    passed = serializers.SerializerMethodField()
-    percentage = serializers.SerializerMethodField()
-    average_time_per_question = serializers.SerializerMethodField()
+
+    # Submission details
+    submission = serializers.SerializerMethodField()
+
+    # Answer breakdown
+    answers = serializers.SerializerMethodField()
+
+    # Category performance with full details
+    category_performance = serializers.SerializerMethodField()
+
+    # Insights and recommendations
+    insights = serializers.SerializerMethodField()
+
+    # Question-by-question review
+    questions = serializers.SerializerMethodField()
 
     class Meta:
         model = ExamSession
         fields = [
+            # Basic info
             "session_id",
             "completed_at",
-            "total_time_spent",
-            "total_questions",
-            "correct_answers",
+            # Scores
             "scaled_score",
             "percentage",
             "passing_score",
             "passed",
             "status",
             "performance_level",
+            # Timing
+            "total_time_spent",
+            "exam_duration",
             "average_time_per_question",
+            # Detailed analytics
+            "submission",
+            "answers",
             "category_performance",
+            "insights",
+            "questions",
         ]
 
     def get_performance_level(self, obj):
+        """Performance level based on scaled score"""
         score = obj.scaled_score or 0
         if score >= 700:
             return "Excellent"
@@ -259,42 +320,73 @@ class ExamResultsDetailSerializer(serializers.ModelSerializer):
             return "Supervised Practice Level"
         return "Below Passing"
 
-    def get_accuracy(self, obj):
-        return obj.percentage
-
     def get_status(self, obj):
+        """Pass/Fail status"""
         return "Passed" if obj.passed else "Failed"
 
-    def get_passed(self, obj):
-        """Access the @property directly"""
-        return obj.passed
+    def get_submission(self, obj):
+        """
+        Submission details
+        Returns: type (manual/timeout), time utilization stats
+        """
+        time_used = obj.total_time_spent
+        time_available = obj.exam_duration
+        time_utilization = (
+            round((time_used / time_available * 100), 1) if time_available > 0 else 0.0
+        )
 
-    def get_percentage(self, obj):
-        """Access the @property directly"""
-        return obj.percentage
+        # Determine if auto-submitted (timeout) or manual
+        # Check if time ran out (used 100% or more of available time)
+        submission_type = "timeout" if time_utilization >= 100 else "manual"
 
-    def get_average_time_per_question(self, obj):
-        """Access the @property directly"""
-        return obj.average_time_per_question
+        return {
+            "type": submission_type,
+            "time_utilized": time_used,  # in seconds
+            "time_available": time_available,  # in seconds
+            "time_utilization_percent": time_utilization,
+        }
+
+    def get_answers(self, obj):
+        """
+        Answer breakdown statistics
+        Returns: total, answered, skipped, correct, incorrect
+        """
+        exam_questions = obj.exam_questions.all()
+
+        total = exam_questions.count()
+        answered = exam_questions.exclude(user_answer__isnull=True).count()
+        skipped = exam_questions.filter(user_answer__isnull=True).count()
+        correct = exam_questions.filter(is_correct=True).count()
+        incorrect = exam_questions.filter(is_correct=False).count()
+
+        return {
+            "total": total,
+            "answered": answered,
+            "skipped": skipped,
+            "correct": correct,
+            "incorrect": incorrect,
+        }
 
     def get_category_performance(self, obj):
-        """Category breakdown with accuracy"""
-        from django.db.models import Count, Q
-
+        """
+        Category-wise performance breakdown
+        Returns: name, accuracy, correct, incorrect, skipped, time stats
+        """
         performance = obj.exam_questions.values(
             "question__category__id", "question__category__name"
         ).annotate(
             total_questions=Count("id"),
             correct_answers=Count("id", filter=Q(is_correct=True)),
+            incorrect_answers=Count("id", filter=Q(is_correct=False)),
+            skipped_questions=Count("id", filter=Q(user_answer__isnull=True)),
+            total_time=Sum("time_spent"),
         )
 
         return [
             {
                 "category_id": p["question__category__id"],
-                "category_name": p["question__category__name"],
-                "total_questions": p["total_questions"],
-                "correct_answers": p["correct_answers"],
-                "percentage": round(
+                "name": p["question__category__name"],
+                "accuracy": round(
                     (
                         (p["correct_answers"] / p["total_questions"] * 100)
                         if p["total_questions"] > 0
@@ -302,6 +394,113 @@ class ExamResultsDetailSerializer(serializers.ModelSerializer):
                     ),
                     1,
                 ),
+                "correct": p["correct_answers"],
+                "incorrect": p["incorrect_answers"],
+                "skipped": p["skipped_questions"],
+                "total_time": p["total_time"] or 0,
+                "avg_time_per_question": round(
+                    (
+                        (p["total_time"] / p["total_questions"])
+                        if p["total_questions"] > 0 and p["total_time"]
+                        else 0.0
+                    ),
+                    1,
+                ),
             }
             for p in performance
         ]
+
+    def get_insights(self, obj):
+        """
+        Generate insights and recommendations based on performance
+        Returns: array of insight objects with type, severity, message
+        """
+        insights = []
+
+        # Get category performance for weak area detection
+        categories = self.get_category_performance(obj)
+        weak_categories = [c["name"] for c in categories if c["accuracy"] < 50]
+
+        # Get answer stats
+        answers = self.get_answers(obj)
+        submission = self.get_submission(obj)
+
+        # Weak categories insight
+        if weak_categories:
+            insights.append(
+                {
+                    "type": "weak_categories",
+                    "severity": "high" if len(weak_categories) > 2 else "medium",
+                    "message": f"Focus on: {', '.join(weak_categories[:3])}",
+                }
+            )
+
+        # Unanswered questions insight
+        if answers["skipped"] > 0:
+            severity = (
+                "high" if answers["skipped"] > obj.total_questions * 0.2 else "medium"
+            )
+            insights.append(
+                {
+                    "type": "unanswered_questions",
+                    "severity": severity,
+                    "message": f"{answers['skipped']} questions unanswered. Attempt all questions.",
+                }
+            )
+
+        # Time pressure insight
+        if submission["time_utilization_percent"] >= 95:
+            insights.append(
+                {
+                    "type": "time_pressure",
+                    "severity": "high",
+                    "message": "You used most of your time. Practice faster resolution.",
+                }
+            )
+        elif submission["type"] == "timeout":
+            insights.append(
+                {
+                    "type": "time_pressure",
+                    "severity": "critical",
+                    "message": "You ran out of time. Practice time management.",
+                }
+            )
+
+        # Overall performance insight
+        if obj.percentage < 50:
+            insights.append(
+                {
+                    "type": "needs_study",
+                    "severity": "critical",
+                    "message": "Review core concepts before next attempt.",
+                }
+            )
+        elif obj.percentage < 70:
+            insights.append(
+                {
+                    "type": "needs_improvement",
+                    "severity": "high",
+                    "message": "You're improving! Focus on weak areas to reach passing.",
+                }
+            )
+        elif obj.percentage >= 80:
+            insights.append(
+                {
+                    "type": "excellent",
+                    "severity": "low",
+                    "message": "Excellent performance! Keep up the great work.",
+                }
+            )
+
+        return insights
+
+    def get_questions(self, obj):
+        """
+        Complete question-by-question review
+        Returns: array of all questions with user answers, correct answers, explanations
+        """
+        questions = obj.exam_questions.select_related(
+            "question", "question__category"
+        ).order_by("question_number")
+
+        return QuestionReviewSerializer(questions, many=True).data

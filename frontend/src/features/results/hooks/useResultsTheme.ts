@@ -10,7 +10,7 @@ export const useResultsTheme = () => {
   return {
     isDark,
     theme,
-    toggleTheme,
     classes,
+    toggleTheme,
   };
 };

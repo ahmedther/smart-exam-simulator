@@ -1,36 +1,109 @@
-// src/features/results/utils/results.theme.utils.ts
+import type { GradientColorScheme } from "../types";
 
-/**
- * Get gradient color classes based on score
- * Returns different color schemes for dark/light themes
- */
-export const getScoreColor = (score: number, isDark: boolean) => {
+export const getPercentageColor = (
+  percentage: number,
+  isDark: boolean
+): GradientColorScheme => {
   if (isDark) {
-    if (score >= 600) return "from-emerald-500 to-teal-500";
-    if (score >= 500) return "from-blue-500 to-cyan-500";
-    if (score >= 400) return "from-amber-500 to-orange-500";
-    return "from-rose-500 to-red-500";
+    if (percentage >= 80)
+      return {
+        gradient: "from-emerald-500 to-teal-500",
+        border: "border-emerald-500/30",
+        text: "text-emerald-400",
+      };
+    if (percentage >= 60)
+      return {
+        gradient: "from-blue-500 to-cyan-500",
+        border: "border-blue-500/30",
+        text: "text-blue-400",
+      };
+    if (percentage >= 40)
+      return {
+        gradient: "from-amber-500 to-orange-500",
+        border: "border-amber-500/30",
+        text: "text-amber-400",
+      };
+    return {
+      gradient: "from-rose-500 to-red-500",
+      border: "border-rose-500/30",
+      text: "text-rose-400",
+    };
+  } else {
+    if (percentage >= 80)
+      return {
+        gradient: "from-emerald-400 to-teal-400",
+        border: "border-emerald-200",
+        text: "text-emerald-700",
+      };
+    if (percentage >= 60)
+      return {
+        gradient: "from-indigo-400 to-purple-400",
+        border: "border-indigo-200",
+        text: "text-indigo-700",
+      };
+    if (percentage >= 40)
+      return {
+        gradient: "from-amber-400 to-orange-400",
+        border: "border-amber-200",
+        text: "text-amber-700",
+      };
+    return {
+      gradient: "from-rose-400 to-pink-400",
+      border: "border-rose-200",
+      text: "text-rose-700",
+    };
+  }
+};
+
+export const getScoreColor = (
+  score: number,
+  isDark: boolean
+): GradientColorScheme => {
+  if (isDark) {
+    if (score >= 600)
+      return {
+        gradient: "from-emerald-500 to-teal-500",
+        border: "border-emerald-500/30",
+        text: "text-emerald-400",
+      };
+    if (score >= 500)
+      return {
+        gradient: "from-blue-500 to-cyan-500",
+        border: "border-blue-500/30",
+        text: "text-blue-400",
+      };
+    if (score >= 400)
+      return {
+        gradient: "from-amber-500 to-orange-500",
+        border: "border-amber-500/30",
+        text: "text-amber-400",
+      };
+    return {
+      gradient: "from-rose-500 to-red-500",
+      border: "border-rose-500/30",
+      text: "text-rose-400",
+    };
   } else {
     if (score >= 600)
       return {
-        bg: "from-emerald-400 to-teal-400",
+        gradient: "from-emerald-400 to-teal-400",
         border: "border-emerald-200",
         text: "text-emerald-700",
       };
     if (score >= 500)
       return {
-        bg: "from-indigo-400 to-purple-400",
+        gradient: "from-indigo-400 to-purple-400",
         border: "border-indigo-200",
         text: "text-indigo-700",
       };
     if (score >= 400)
       return {
-        bg: "from-amber-400 to-orange-400",
+        gradient: "from-amber-400 to-orange-400",
         border: "border-amber-200",
         text: "text-amber-700",
       };
     return {
-      bg: "from-rose-400 to-pink-400",
+      gradient: "from-rose-400 to-pink-400",
       border: "border-rose-200",
       text: "text-rose-700",
     };

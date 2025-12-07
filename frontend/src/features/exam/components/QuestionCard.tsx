@@ -129,7 +129,7 @@ export default function QuestionCard() {
 
       {/* Question Text */}
       <h2 className="text-2xl font-bold text-gray-800 mb-8 leading-relaxed ">
-        {capitalize(page.currentQuestion?.question_text.trim())}
+        {page.currentQuestion?.question_text.trim()}
       </h2>
 
       {/* Answer Options */}

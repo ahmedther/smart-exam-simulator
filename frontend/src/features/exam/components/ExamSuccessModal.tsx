@@ -272,7 +272,6 @@ function Demo() {
         isOpen={isOpen}
         onNavigate={() => {
           setIsOpen(false);
-          console.log("Navigating to results...");
         }}
         sessionId="abc123-def456-ghi789"
       />

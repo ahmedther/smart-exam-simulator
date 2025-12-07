@@ -18,6 +18,8 @@ export const DARK_THEME_CLASSES = {
   paginationActive: "bg-blue-500 text-white",
   icon: "w-6 h-6 text-white",
   iconText: "text-white",
+  textPrimary: "text-white",
+  textSecondary: "text-slate-400",
 };
 
 export const LIGHT_THEME_CLASSES = {
@@ -39,4 +41,6 @@ export const LIGHT_THEME_CLASSES = {
     "bg-linear-to-r from-indigo-600 to-purple-600 text-white shadow-md",
   icon: "w-6 h-6 text-indigo-600",
   iconText: "text-indigo-600",
+  textPrimary: "text-gray-900",
+  textSecondary: "text-gray-600",
 };

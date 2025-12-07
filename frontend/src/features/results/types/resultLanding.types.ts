@@ -52,6 +52,11 @@ type ThemeClassesTypes = {
   icon: string;
   iconText: string;
 };
+type GradientColorScheme = {
+  gradient: string;
+  border: string;
+  text: string;
+};
 
 export type {
   PaginatedResultsTypes,
@@ -59,4 +64,5 @@ export type {
   ResultsStatsTypes,
   ResultsSearchTypes,
   ThemeClassesTypes,
+  GradientColorScheme,
 };

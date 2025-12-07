@@ -7,3 +7,9 @@ export const resultsQueryOptions = (params: ResultsSearchTypes) =>
     queryKey: ["results", params.page, params.search, params.sort],
     queryFn: () => examApi.fetchAllResults(params),
   });
+
+export const resultsDetailsQueryOptions = (sessionId: string) =>
+  queryOptions({
+    queryKey: ["results", sessionId],
+    queryFn: () => examApi.fetchResultDetails(sessionId),
+  });

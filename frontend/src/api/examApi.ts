@@ -6,7 +6,10 @@ import type {
   ExamSession,
   PaginatedResponse,
 } from "../features/exam/types";
-import type { PaginatedResultsTypes } from "../features/results/types";
+import type {
+  ExamResultsDetail,
+  PaginatedResultsTypes,
+} from "../features/results/types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -131,5 +134,9 @@ export const examApi = {
     return apiFetch<PaginatedResultsTypes>(
       `/results/?${queryParams.toString()}`
     );
+  },
+
+  fetchResultDetails: async (sessionId: string): Promise<ExamResultsDetail> => {
+    return apiFetch<ExamResultsDetail>(`/results/${sessionId}/`);
   },
 };

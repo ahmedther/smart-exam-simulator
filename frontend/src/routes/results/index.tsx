@@ -5,15 +5,13 @@ import {
   ResultPagination,
   ResultsHeader,
   ResultsSearch,
+  ResultsCount,
+  ResultCard,
 } from "../../features/results/components";
 import type { ResultsSearchTypes } from "../../features/results/types";
-import ResultCard from "../../features/results/components/landing/ResultCard";
-import { ResultsCount } from "../../features/results/components/landing/ResultsCount";
-import {
-  getPerformanceBadge,
-  getScoreColor,
-} from "../../features/results/theme";
+import { getPerformanceBadge } from "../../features/results/theme";
 import { resultsQueryOptions } from "../../features/results/config/resultQuery.config";
+import ErrorFallback from "../../components/layouts/ErrorFallback";
 
 export const Route = createFileRoute("/results/")({
   component: ResultsLanding,
@@ -26,9 +24,8 @@ export const Route = createFileRoute("/results/")({
     };
   },
   loaderDeps: ({ search }) => search, // Add this line!
+  errorComponent: ErrorFallback,
   loader: async ({ context: { queryClient }, deps }) => {
-    console.log("Loader deps:", deps);
-
     return queryClient.ensureQueryData(
       resultsQueryOptions({
         page: deps.page,
@@ -39,7 +36,7 @@ export const Route = createFileRoute("/results/")({
   },
 });
 
-export default function ResultsLanding() {
+function ResultsLanding() {
   const navigate = useNavigate({ from: Route.fullPath });
   const search = Route.useSearch();
   const { data } = useSuspenseQuery(resultsQueryOptions(search));
@@ -82,14 +79,12 @@ export default function ResultsLanding() {
         {data.results.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {data.results.map((result) => {
-              const colors = getScoreColor(result.scaled_score, isDark);
               return (
                 <ResultCard
                   key={result.session_id}
                   result={result}
                   classes={classes}
                   isDark={isDark}
-                  colors={colors}
                   performanceBadge={(level: string) =>
                     getPerformanceBadge(level, isDark)
                   }

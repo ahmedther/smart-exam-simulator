@@ -7,35 +7,25 @@ import {
 } from "lucide-react";
 import type { ExamResultTypes, ThemeClassesTypes } from "../../types";
 import { calculateQuestionMargin } from "../../../../utils";
-
-type ColorType =
-  | string
-  | {
-      bg: string;
-      border: string;
-      text: string;
-    };
+import { getScoreColor } from "../../theme";
 
 type Props = {
   isDark: boolean;
   result: ExamResultTypes;
   classes: ThemeClassesTypes;
-  colors: ColorType;
   performanceBadge: (level: string) => string;
 };
 
-export default function ResultCard({
+export function ResultCard({
   result,
   classes,
   isDark,
-  colors,
   performanceBadge,
 }: Props) {
-  const gradientClass = typeof colors === "string" ? colors : colors.bg;
-
   const questionMargin = calculateQuestionMargin(result);
   const marginText =
     questionMargin >= 0 ? `+${questionMargin}` : `${questionMargin}`;
+  const gradientClass = getScoreColor(result.scaled_score, isDark).gradient;
 
   return (
     <a
