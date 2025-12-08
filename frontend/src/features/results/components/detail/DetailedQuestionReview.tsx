@@ -208,7 +208,7 @@ export function DetailedQuestionReview({
               <div
                 className={`absolute inset-0 rounded-xl pointer-events-none ${
                   isDark
-                    ? "bg-linear-to-br from-white/[0.02] to-transparent"
+                    ? "bg-linear-to-br from-white/[0.2] to-transparent"
                     : "bg-linear-to-br from-white/60 to-transparent"
                 }`}
               />

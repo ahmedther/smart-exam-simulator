@@ -1,0 +1,78 @@
+upstream django_backend {
+    least_conn;
+    keepalive 32;
+    server app:${SERVE_DJANGO_ON} max_fails=3 fail_timeout=30s;
+}
+
+# Double $$ to escape nginx variables
+limit_req_zone $$binary_remote_addr zone=api_limit:10m rate=10r/s;
+
+server {
+    listen ${LISTEN_PORT};
+    server_name _;
+    
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    
+    client_max_body_size 100M;
+    client_body_buffer_size 128k;
+    
+    client_body_timeout 60s;
+    client_header_timeout 60s;
+    keepalive_timeout 65s;
+    send_timeout 60s;
+    
+    access_log /var/log/nginx/backend.log combined;
+    error_log /var/log/nginx/backend_error.log warn;
+    
+    location /static/ {
+        alias /app/static/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    location /media/ {
+        alias /app/media/;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+    
+    location / {
+        limit_req zone=api_limit burst=20 nodelay;
+        
+        proxy_pass http://django_backend;
+        proxy_http_version 1.1;
+        
+        # Escape all nginx variables with $$
+        proxy_set_header Host $$host;
+        proxy_set_header X-Real-IP $$remote_addr;
+        proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $$scheme;
+        
+        proxy_set_header Upgrade $$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 8 4k;
+        proxy_busy_buffers_size 8k;
+    }
+    
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+    
+    location = /favicon.ico {
+        access_log off;
+        log_not_found off;
+        return 204;
+    }
+}
