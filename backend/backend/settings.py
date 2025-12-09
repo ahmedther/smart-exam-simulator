@@ -10,20 +10,34 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env(
+    # Set defaults and casting
+    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list, []),
+    CSRF_TRUSTED_ORIGINS=(list, []),
+    DATABASE_URL=(str, f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
+    SECRET_KEY=(str, "change-me-in-production"),
+    GUNICORN_WORKERS=(int, 4),
+    LOG_LEVEL=(str, "INFO"),
+)
+
+# Read .env file if it exists
+environ.Env.read_env(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-5at7gpppff=3*g$5l)kpa=%&%==itli28z4au2)oedb@n(a*gn"
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env("DEBUG")
 
 
 # Application definition
@@ -72,15 +86,17 @@ REST_FRAMEWORK = {
     ],
 }
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+# ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
-
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
 # CORS Settings (for React frontend)
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite default
-    "http://127.0.0.1:5173",  # Add this - you're using 127.0.0.1
-    "http://localhost:3000",  # Create React App
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",  # Vite default
+#     "http://127.0.0.1:5173",  # Add this - you're using 127.0.0.1
+#     "http://localhost:3000",  # Create React App
+# ]
 CORS_ALLOW_CREDENTIALS = True
 
 # Add these for more permissive CORS during development
@@ -170,9 +186,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "static"

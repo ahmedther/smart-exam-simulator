@@ -1,0 +1,146 @@
+# Python cache and compiled files
+__pycache__/
+__pycache__/*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3-journal
+/media/
+/staticfiles/
+/static/
+
+# Django migrations (optional - see note below)
+# */migrations/*.py
+# */migrations/*.pyc
+# !*/migrations/__init__.py
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+nosetests.xml
+
+# Environment variables
+.env
+.env.*
+!.env.example
+*.env
+.envrc
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+
+# Documentation
+docs/_build/
+site/
+*.md
+README.md
+LICENSE
+CHANGELOG.md
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+*.dockerfile
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+.circleci/
+
+# Package management
+*.egg-info/
+.eggs/
+dist/
+build/
+*.whl
+.installed.cfg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# Development tools
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Frontend (if you have React/Vue in same repo)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+
+.prettierrc
+# Scripts (optional - include if needed)
+# scripts/
+# *.sh
+
+# Fixtures (optional - include if needed for seeding data)
+# */fixtures/*.json
