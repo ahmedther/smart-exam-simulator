@@ -93,14 +93,14 @@ class QuestionAnswerProcessor:
 
         # Input files
         self.questions_file = base.with_suffix(".txt")
-        self.answers_file = Path(str(base) + " Answers.txt")
+        self.answers_file = Path(str(base) + "_Answers.txt")
 
         # Output files
-        self.categorization_json = Path(str(base) + " Categorization.json")
-        self.prompt_file = Path(str(base) + " Categorization_Prompt.txt")
-        self.categories_response_file = Path(str(base) + " Categories Response.json")
-        self.final_json = Path(str(base) + " Final.json")
-        self.sql_file = Path(str(base) + " Insert.sql")
+        self.categorization_json = Path(str(base) + "_Categorization.json")
+        self.prompt_file = Path(str(base) + "_Categorization_Prompt.txt")
+        self.categories_response_file = Path(str(base) + "_Categories_Response.json")
+        self.final_json = Path(str(base) + "_Final.json")
+        self.sql_file = Path(str(base) + "_Insert.sql")
 
         print(f"📝 Questions file: {self.questions_file.name}")
         print(f"📝 Answers file: {self.answers_file.name}")
@@ -385,7 +385,7 @@ class QuestionAnswerProcessor:
                         return ""
                     return text.replace("'", "''")
 
-                sql = f"""INSERT INTO {self.sql_table_name} (category_id, question_text, choice_a, choice_b, choice_c, choice_d, correct_answer, explanation, is_active, created_at, updated_at)
+                sql = f"""INSERT OR IGNORE INTO {self.sql_table_name} (category_id, question_text, choice_a, choice_b, choice_c, choice_d, correct_answer, explanation, is_active, created_at, updated_at)
 VALUES ({item['category']}, '{escape_sql(item['question_text'])}', '{escape_sql(item['choice_a'])}', '{escape_sql(item['choice_b'])}', '{escape_sql(item['choice_c'])}', '{escape_sql(item['choice_d'])}', '{item['correct_answer']}', '{escape_sql(item['explanation'])}', TRUE, datetime('now'), datetime('now'));
 
 """
@@ -562,7 +562,7 @@ VALUES ({item['category']}, '{escape_sql(item['question_text'])}', '{escape_sql(
 if __name__ == "__main__":
     # Create processor
     processor = QuestionAnswerProcessor(
-        naming_convention="Exam 3",
+        naming_convention="Exam_1",
         sql_table_name="api_question",
         auto_run=False,  # Set to True to skip prompts
     )
