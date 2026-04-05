@@ -3,9 +3,11 @@ import NavigationButtons from "./NavigationButtons";
 import Spinner from "../../../components/ui/Spinner";
 import { useQuestionCardRefs } from "../hooks";
 import { capitalize } from "lodash";
+import type { Category } from "../types";
 
 export default function QuestionCard() {
   const page = useQuestionCardRefs();
+  type ChoiceLetter = (typeof page.choices)[number];
 
   if (!page.currentQuestion) {
     return <Spinner text="Loading Questions..." size="lg" />;
@@ -91,7 +93,7 @@ export default function QuestionCard() {
                   className="w-full p-3 rounded-lg border-2 border-indigo-300 focus:border-indigo-600 focus:outline-none bg-white text-gray-800 font-medium"
                 >
                   <option value={"0"}>-- Select a category --</option>
-                  {page.categories.map((cat) => (
+                  {page.categories.map((cat: Category) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
                     </option>
@@ -134,7 +136,7 @@ export default function QuestionCard() {
 
       {/* Answer Options */}
       <div className="space-y-4">
-        {page.choices.map((letter) => (
+        {page.choices.map((letter: ChoiceLetter) => (
           <button
             key={letter}
             onClick={() => page.selectAnswer(letter)}

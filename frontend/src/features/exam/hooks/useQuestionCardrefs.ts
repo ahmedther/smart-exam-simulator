@@ -13,7 +13,7 @@ export function useQuestionCardRefs() {
   const selectAnswer = useExamStore((s) => s.selectAnswer);
   const selectedAnswer = currentAnswer?.selectedOptionId;
   const currentQuestionIndex = useExamStore(
-    (s) => s.state.currentQuestionIndex
+    (s) => s.state.currentQuestionIndex,
   );
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -30,7 +30,7 @@ export function useQuestionCardRefs() {
       setShowCategoryDropdown(false);
       changeCategory.reset();
     },
-    showCategoryDropdown
+    showCategoryDropdown,
   );
 
   const handleCategoryChange = (newCategoryId: string) => {
@@ -45,7 +45,7 @@ export function useQuestionCardRefs() {
       toast.info(
         `Category not changed! Question already belongs to ${
           currentQuestion!.category_name
-        }`
+        }`,
       );
     }
 
