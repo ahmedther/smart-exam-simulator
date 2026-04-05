@@ -45,8 +45,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/exam/$sessionId': typeof ExamSessionIdRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
-  '/exam': typeof ExamIndexRoute
-  '/results': typeof ResultsIndexRoute
+  '/exam/': typeof ExamIndexRoute
+  '/results/': typeof ResultsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,8 +69,8 @@ export interface FileRouteTypes {
     | '/'
     | '/exam/$sessionId'
     | '/results/$sessionId'
-    | '/exam'
-    | '/results'
+    | '/exam/'
+    | '/results/'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/exam/$sessionId' | '/results/$sessionId' | '/exam' | '/results'
   id:
@@ -102,14 +102,14 @@ declare module '@tanstack/react-router' {
     '/results/': {
       id: '/results/'
       path: '/results'
-      fullPath: '/results'
+      fullPath: '/results/'
       preLoaderRoute: typeof ResultsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exam/': {
       id: '/exam/'
       path: '/exam'
-      fullPath: '/exam'
+      fullPath: '/exam/'
       preLoaderRoute: typeof ExamIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
